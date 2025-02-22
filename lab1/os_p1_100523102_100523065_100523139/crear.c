@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     umask(varmask);
 
     if (fd == -1){
-        printf("There has been an error %d\n", errno);
+        printf("There has been an error creating the file: %d\n", errno);
         return -1;
     }
     chmod(argv[1], mode);
