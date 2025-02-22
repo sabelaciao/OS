@@ -14,21 +14,24 @@ int main(int argc, char *argv[]) {
     }
 
     mode_t mode;
-
+    
+    // transform argument to octal and checks if it's valid
     if (sscanf(argv[2], "%o", &mode) != 1) {
         perror("The input could not be converted to octal");
         return -1;
     }
 
-    // transform argument to octal
-    sscanf(argv[2], "%o", &mode); 
-
     // mode_t has the permissions of a file
+
+    // Save old umask and set it to 0
     mode_t varmask = umask(0);
 
     // create the file
     int fd = -1;
-    fd = open(argv[1], O_CREAT | O_WRONLY, mode);
+    // O_EXCL -> Ensure that a file is only created if it does not already exist. If it does, it loads an error in 'errno' variable
+    // O_CREAT ->  Creates the file if it does not exist.
+    // O_TRUNC -> Truncate (empty) a file if it already exists.
+    fd = open(argv[1], O_CREAT | O_EXCL | O_TRUNC, mode);
 
     umask(varmask);
 
@@ -38,7 +41,8 @@ int main(int argc, char *argv[]) {
     }
     chmod(argv[1], mode);
 
+    // close the file
+    close(fd);
+
     return 0;
 }
-
-
