@@ -27,7 +27,8 @@ int main(int argc, char *argv[]) {
     mode_t varmask = umask(0);
 
     // create the file
-    int fd = open(argv[1], O_CREAT | O_WRONLY, mode);
+    int fd = -1;
+    fd = open(argv[1], O_CREAT | O_WRONLY, mode);
 
     umask(varmask);
 
