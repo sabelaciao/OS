@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-	int infile1, infile2, outfile, nread;
+	ssize_t infile1, infile2, outfile, nread;
 
 	// Open the first file and check if it was opened correctly
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
 	// Open the second file and check if it was opened correctly
 	infile2 = open(argv[2], O_RDONLY);
 
-	if(infile2 < 0){
+	if(infile2 == -1){
 		close (infile1);
 		perror("The second input file could not be opened");
 		return -1;
@@ -58,27 +58,47 @@ int main(int argc, char *argv[]){
 	int sum = 0;
 	int bufferSize = sizeof(struct alumno);
 	char buffer[bufferSize];
-	struct alumno myAlumn;
+	struct alumno myAlumn[100];
+	int count = 0;
 
-	nread = read(infile1, buffer, bufferSize);
 
-	while (nread > 0){
-		nread = read(infile1, buffer, bufferSize);
+	while ((nread = read(infile1, buffer, bufferSize)) > 0){
+		count++;
+		if (count >= 100) {
+			perror("Error: there can't be more than 100 students!!");
+			return -1;
+		}
+		// Copy buffer content to myAlumn[count]
+		memcpy(&myAlumn[count], buffer, bufferSize);
 	}
 
-	if (nread == -1){
-		printf("An error has ocurred reading the file: %d\n", errno);
+	if(nread == -1){
+		printf("An error has ocurred reading the second file: %d\n", errno);
 		return -1;
 	}
 
+	close(infile1);
 
+	while ((nread = read(infile2, buffer, bufferSize)) > 0){
+		count++;
+		if (count >= 100) {
+			perror("Error: there can't be more than 100 students!!");
+			return -1;
+		}
+		// Copy buffer content to myAlumn[count]
+		memcpy(&myAlumn[count], buffer, bufferSize);
+	}
 
-	// Close files
-    close(infile1);
-    close(infile2);
+	if (nread == -1){
+		printf("An error has ocurred reading the second file: %d\n", errno);
+		return -1;
+	}
+
+	close(infile2);
+
+	
+
 	close(outfile);
-
-
 
 	return 0;
 }
