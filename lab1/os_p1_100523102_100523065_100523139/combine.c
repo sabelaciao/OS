@@ -61,6 +61,7 @@ int main(int argc, char *argv[]){
 	char buffer[bufferSize];
 	struct alumno myAlumn[MAX_ALUMNS];
 	int count = 0;
+	int grades[5] = {0};
 
 
 	while ((nread = read(infile1, buffer, bufferSize)) > 0){
@@ -70,7 +71,8 @@ int main(int argc, char *argv[]){
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
-		count++;
+
+	
 	}
 
 	if(nread == -1){
@@ -87,7 +89,6 @@ int main(int argc, char *argv[]){
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
-		count++;
 	}
 
 	if (nread == -1){
@@ -99,6 +100,29 @@ int main(int argc, char *argv[]){
 
 	// Sort by grade
 	for (int i = 0; i < count - 1; i++) {
+		// Save how many students have 10 (M), 9 (S), N (8 or 7), A (6 or 5), F (less than 5)
+		switch (myAlumn[count].nota){
+			case 10:
+				grades[4]++;
+			break;
+
+			case 9:
+				grades[3]++;
+			break;
+
+			case 8: case 7:
+				grades[2]++;
+			break;
+
+			case 6: case 5:
+				grades[1]++;
+			break;
+
+			default:
+				grades[0]++;
+			break;
+		}
+		
         for (int j = 0; j < count - i - 1; j++) {
             if (myAlumn[j].nota > myAlumn[j + 1].nota) {
                 // Swap myAlumn[j] and myAlumn[j+1]
