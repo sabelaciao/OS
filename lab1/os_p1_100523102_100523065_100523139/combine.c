@@ -56,7 +56,6 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	int sum = 0;
 	int bufferSize = sizeof(struct alumno);
 	char buffer[bufferSize];
 	struct alumno myAlumn[MAX_ALUMNS];
@@ -71,8 +70,7 @@ int main(int argc, char *argv[]){
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
-
-	
+		count++;
 	}
 
 	if(nread == -1){
@@ -89,6 +87,7 @@ int main(int argc, char *argv[]){
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
+		count++;
 	}
 
 	if (nread == -1){
@@ -165,19 +164,22 @@ int main(int argc, char *argv[]){
 	// Create estadisticas.csv
 	size_t estadisticas = open("estadisticas.csv", O_WRONLY | O_CREAT | O_TRUNC, PERM);
 
-	// creation of array
+	// Creation of array
 	char result[20];
 	char differentGrades[5] = {'F', 'A' , 'N', 'S', 'M'};
 
 	// Format the string as asked
-	for(int i = 4; i >= 0; i--){
-		sprintf(result, "%c;%d;%.2f%%\n", differentGrades[i], grades[i], (grades[i]*100)/count);
-		if (write(estadisticas, result, strlen(result)) == -1){
-			perror("Error writing in estadisticas.csv");
-			return -1;
+	if (count > 0){
+		for(int i = 4; i >= 0; i--){
+			sprintf(result, "%c;%d;%.2f%%\n", differentGrades[i], grades[i], (double)(grades[i]*100)/count);
+			if (write(estadisticas, result, strlen(result)) == -1){
+				perror("Error writing in estadisticas.csv");
+				return -1;
+			}
 		}
+	} else{
+		printf("There are no students to write in estadisticas.csv!!\n");
 	}
-
 	close(estadisticas);
 
 	return 0;
