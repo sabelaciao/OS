@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 	// O_RDONLY -> Open the file in binary mode
 	infile1 = open(argv[1], O_RDONLY);
 
-	if(infile1 < 0){
+	if(infile1 == -1){
 		perror("The first input file could not be opened");
 		return -1;
 	}
@@ -48,12 +48,12 @@ int main(int argc, char *argv[]){
 
 	outfile = creat(argv[3], PERM);
 
-	if (outfile < 0 ) {
+	if (outfile == -1) {
 		close (infile1);
 		close (infile2);
 		perror("The output file could not be created!");
-		return 1;
-		}
+		return -1;
+	}
 
 	int sum = 0;
 	int bufferSize = sizeof(struct alumno);
@@ -63,30 +63,30 @@ int main(int argc, char *argv[]){
 
 
 	while ((nread = read(infile1, buffer, bufferSize)) > 0){
-		count++;
 		if (count >= 100) {
 			perror("Error: there can't be more than 100 students!!");
 			return -1;
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
+		count++;
 	}
 
 	if(nread == -1){
-		printf("An error has ocurred reading the second file: %d\n", errno);
+		printf("An error has ocurred reading the first file: %d\n", errno);
 		return -1;
 	}
 
 	close(infile1);
 
 	while ((nread = read(infile2, buffer, bufferSize)) > 0){
-		count++;
 		if (count >= 100) {
 			perror("Error: there can't be more than 100 students!!");
 			return -1;
 		}
 		// Copy buffer content to myAlumn[count]
 		memcpy(&myAlumn[count], buffer, bufferSize);
+		count++;
 	}
 
 	if (nread == -1){
