@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     mode_t mode;
     
     // transform argument to octal and checks if it's valid
-    if (sscanf(argv[2], "%o", &mode) != 1) {
+    if (sscanf(argv[2], "%o", &mode) != -1) {
         perror("The input could not be converted to octal");
         return -1;
     }
