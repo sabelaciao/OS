@@ -98,31 +98,29 @@ int main(int argc, char *argv[]){
 
 	close(infile2);
 
+	// Save how many students have 10 (M), 9 (S), N (8 or 7), A (6 or 5), F (less than 5)
+    for (int i = 0; i < count; i++) {
+        switch (myAlumn[i].nota) {
+            case 10:
+                grades[4]++;
+                break;
+            case 9:
+                grades[3]++;
+                break;
+            case 8: case 7:
+                grades[2]++;
+                break;
+            case 6: case 5:
+                grades[1]++;
+                break;
+            default:
+                grades[0]++;
+                break;
+        }
+    }
+
 	// Sort by grade
 	for (int i = 0; i < count - 1; i++) {
-		// Save how many students have 10 (M), 9 (S), N (8 or 7), A (6 or 5), F (less than 5)
-		switch (myAlumn[count].nota){
-			case 10:
-				grades[4]++;
-			break;
-
-			case 9:
-				grades[3]++;
-			break;
-
-			case 8: case 7:
-				grades[2]++;
-			break;
-
-			case 6: case 5:
-				grades[1]++;
-			break;
-
-			default:
-				grades[0]++;
-			break;
-		}
-		
         for (int j = 0; j < count - i - 1; j++) {
             if (myAlumn[j].nota > myAlumn[j + 1].nota) {
                 // Swap myAlumn[j] and myAlumn[j+1]
@@ -152,7 +150,6 @@ int main(int argc, char *argv[]){
         }
     }
 
-	
 	// Write all students in the outfile
 
 	for (int i = 0; i < count; i++) {
@@ -164,6 +161,24 @@ int main(int argc, char *argv[]){
     }
 
 	close(outfile);
+
+	// Create estadisticas.csv
+	size_t estadisticas = open("estadisticas.csv", O_WRONLY | O_CREAT | O_TRUNC, PERM);
+
+	// creation of array
+	char result[20];
+	char differentGrades[5] = {'F', 'A' , 'N', 'S', 'M'};
+
+	// Format the string as asked
+	for(int i = 4; i >= 0; i--){
+		sprintf(result, "%c;%d;%.2f%%\n", differentGrades[i], grades[i], (grades[i]*100)/count);
+		if (write(estadisticas, result, strlen(result)) == -1){
+			perror("Error writing in estadisticas.csv");
+			return -1;
+		}
+	}
+
+	close(estadisticas);
 
 	return 0;
 }
