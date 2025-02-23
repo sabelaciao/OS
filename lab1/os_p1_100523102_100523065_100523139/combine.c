@@ -9,6 +9,7 @@
 
 
 #define PERM 0644 // permissions
+#define MAX_ALUMNS 100
 
 struct alumno{
 	char nombre[50];
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]){
 	int sum = 0;
 	int bufferSize = sizeof(struct alumno);
 	char buffer[bufferSize];
-	struct alumno myAlumn[100];
+	struct alumno myAlumn[MAX_ALUMNS];
 	int count = 0;
 
 
@@ -96,7 +97,47 @@ int main(int argc, char *argv[]){
 
 	close(infile2);
 
+	// Sort by grade
+	for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (myAlumn[j].nota > myAlumn[j + 1].nota) {
+                // Swap myAlumn[j] and myAlumn[j+1]
+                struct alumno temp = myAlumn[j];
+                myAlumn[j] = myAlumn[j + 1];
+                myAlumn[j + 1] = temp;
+            } 
+			
+			// If nota is the same, sort by convocatoria (ascending order)
+            else if (myAlumn[j].nota == myAlumn[j + 1].nota) {
+                if (myAlumn[j].convocatoria > myAlumn[j + 1].convocatoria) {
+                    // Swap myAlumn[j] and myAlumn[j + 1]
+                    struct alumno temp = myAlumn[j];
+                    myAlumn[j] = myAlumn[j + 1];
+                    myAlumn[j + 1] = temp;
+                }
+                // If both nota and convocatoria are the same, sort by name (ascending order)
+                else if (myAlumn[j].convocatoria == myAlumn[j + 1].convocatoria) {
+                    if (strcmp(myAlumn[j].nombre, myAlumn[j + 1].nombre) > 0) {
+                        // Swap myAlumn[j] and myAlumn[j + 1]
+                        struct alumno temp = myAlumn[j];
+                        myAlumn[j] = myAlumn[j + 1];
+                        myAlumn[j + 1] = temp;
+                    }
+                }
+			}
+        }
+    }
+
 	
+	// Write all students in the outfile
+
+	for (int i = 0; i < count; i++) {
+        nread = write(outfile, &myAlumn[i], bufferSize);
+        if (nread == -1) {
+            perror("Error writing to the output file");
+            return -1;
+        }
+    }
 
 	close(outfile);
 
