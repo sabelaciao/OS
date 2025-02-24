@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <errno.h>
 
 
 #define PERM 0644 // permissions
@@ -26,7 +25,7 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-	ssize_t infile1, infile2, outfile, nread;
+	ssize_t infile1, infile2, outfile, nread, nwrite;
 
 	// Open the first file and check if it was opened correctly
 
@@ -44,15 +43,6 @@ int main(int argc, char *argv[]){
 	if(infile2 == -1){
 		close (infile1);
 		perror("The second input file could not be opened");
-		return -1;
-	}
-
-	outfile = creat(argv[3], PERM);
-
-	if (outfile == -1) {
-		close (infile1);
-		close (infile2);
-		perror("The output file could not be created!");
 		return -1;
 	}
 
@@ -74,7 +64,7 @@ int main(int argc, char *argv[]){
 	}
 
 	if(nread == -1){
-		printf("An error has ocurred reading the first file: %d\n", errno);
+		printf("An error has ocurred reading the first file!");
 		return -1;
 	}
 
@@ -91,7 +81,7 @@ int main(int argc, char *argv[]){
 	}
 
 	if (nread == -1){
-		printf("An error has ocurred reading the second file: %d\n", errno);
+		printf("An error has ocurred reading the second file!");
 		return -1;
 	}
 
@@ -138,7 +128,7 @@ int main(int argc, char *argv[]){
                 }
                 // If both nota and convocatoria are the same, sort by name (ascending order)
                 else if (myAlumn[j].convocatoria == myAlumn[j + 1].convocatoria) {
-                    if (strcmp(myAlumn[j].nombre, myAlumn[j + 1].nombre) > 0) {
+                    if (strcmp(myAlumn[j].nombre, myAlumn[j + 1].nombre) < 0) {
                         // Swap myAlumn[j] and myAlumn[j + 1]
                         struct alumno temp = myAlumn[j];
                         myAlumn[j] = myAlumn[j + 1];
@@ -149,11 +139,26 @@ int main(int argc, char *argv[]){
         }
     }
 
+	for(int i = 0; i < count; i++){
+		printf("%s, %d, %d\n", myAlumn[i].nombre, myAlumn[i].nota, myAlumn[i].convocatoria);
+	}
 	// Write all students in the outfile
 
+	// O_WRONLY -> Open for writing
+	// O_CREAT -> Create if it does not exist
+	// O_TRUNC -> Empty the file if it does not exist
+	outfile = open(argv[3], O_CREAT | O_WRONLY | O_TRUNC, PERM);
+
+	if (outfile == -1) {
+		close (infile1);
+		close (infile2);
+		perror("The output file could not be created!");
+		return -1;
+	}
+
 	for (int i = 0; i < count; i++) {
-        nread = write(outfile, &myAlumn[i], bufferSize);
-        if (nread == -1) {
+        nwrite = write(outfile, &myAlumn[i], sizeof(myAlumn[i]));
+        if (nwrite == -1) {
             perror("Error writing to the output file");
             return -1;
         }
@@ -168,18 +173,20 @@ int main(int argc, char *argv[]){
 	char result[20];
 	char differentGrades[5] = {'F', 'A' , 'N', 'S', 'M'};
 
-	// Format the string as asked
+	// Create the string as asked
 	if (count > 0){
 		for(int i = 4; i >= 0; i--){
 			sprintf(result, "%c;%d;%.2f%%\n", differentGrades[i], grades[i], (double)(grades[i]*100)/count);
+			// I use strlen sice sizeof returns 20, as result is a string of 20 empty characters are the beginning
 			if (write(estadisticas, result, strlen(result)) == -1){
 				perror("Error writing in estadisticas.csv");
 				return -1;
 			}
 		}
-	} else{
+	} else {
 		printf("There are no students to write in estadisticas.csv!!\n");
 	}
+
 	close(estadisticas);
 
 	return 0;
