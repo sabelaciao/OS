@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     // The function must be called with 3 arguments, as asked in the statement!!
     if (argc != 3){ 
         perror("The number of arguments are not exact!");
-        exit(-1);
+        return -1;
     }
 
     mode_t mode;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     // Transform 'mode' argument to octal and checks if it's valid
     if (sscanf(argv[2], "%o", &mode) != 1) {
         perror("The input could not be converted to octal");
-        exit(-1);
+        return -1;
     }
 
     // mode_t data type normally has the permissions of a file
@@ -41,14 +41,14 @@ int main(int argc, char *argv[]) {
 
     if (fd == -1){
         printf("There has been an error creating the file: %d\n", errno);
-        exit(-1);
+        return -1;
     }
 
     // Ensure correct permissions
     if (chmod(argv[1], mode) == -1) {
         perror("Error setting file permissions");
         close(fd);
-        exit(-1);
+        return -1;
     }
 
     // Close the file

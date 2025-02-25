@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 	// The function must be called with 4 arguments, as asked in the statement!!
     if (argc != 4){ 
         perror("The number of arguments are not exact!");
-    	exit(-1);
+    	return -1;
     }
 
 	// Create variables to open the first two arguments (infile1, infile2),
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 
 	if (infile1 == -1){
 		perror("The first input file could not be opened");
-		exit(-1);
+		return -1;
 	}
 
 	// We will use the buffer. First, we need to know how many bytes
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 		if (count >= 100) {
 			perror("Error: there can't be more than 100 students!!");
 			close(infile1);
-			exit(-1);
+			return -1;
 		}
 		// Copy buffer content to alumns[count]
 		memcpy(&alumns[count], buffer, bufferSize);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]){
 	if (infile2 == -1){
 		close (infile1);
 		perror("The second input file could not be opened");
-		exit(-1);
+		return -1;
 	}
 
 	// We read all 'alumnos' from the file of the second argument
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
 		if (count >= 100) {
 			perror("Error: there can't be more than 100 students!!");
 			close(infile2);
-			exit(-1);
+			return -1;
 		}
 		// Copy buffer content to alumns[count]
 		memcpy(&alumns[count], buffer, bufferSize);
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]){
 
 	if (outfile == -1) {
 		perror("The output file could not be created!");
-		exit(-1);
+		return -1;
 	}
 	
 	for (int i = 0; i < count; i++){
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]){
         if (nwrite == -1){
             perror("Error writing to the output file");
 			close(outfile);
-            exit(-1);
+            return -1;
         }
     }
 
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]){
 			if (write(estadisticas, result, strlen(result)) == -1){
 				perror("Error writing in estadisticas.csv");
 				close(estadisticas);
-				exit(-1);
+				return -1;
 			}
 		}
 	} else {
