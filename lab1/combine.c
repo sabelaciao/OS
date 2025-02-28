@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
         }
     }
 
-	// Sort by grade ('nota') in ascending order
+	// Bubble sort by grade ('nota') in ascending order
 	for (int i = 0; i < count - 1; i++) {
         for (int j = 0; j < count - i - 1; j++) {
             if (alumns[j].nota > alumns[j + 1].nota) {
