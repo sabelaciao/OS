@@ -35,7 +35,10 @@ int main(int argc, char *argv[]){
 
 	// FLAGS:
 	// O_RDONLY -> Open the file for reading only!
+
+	mode_t mask1 = umask(0); // Save mask
 	infile1 = open(argv[1], O_RDONLY);
+	umask(mask1);
 
 	if (infile1 == -1){
 		perror("The first input file could not be opened");
@@ -80,7 +83,9 @@ int main(int argc, char *argv[]){
 
 
 	// Open the second file and check if it was opened correctly
+	mode_t mask2 = umask(0); // Save mask
 	infile2 = open(argv[2], O_RDONLY);
+	umask(mask2);
 
 	if (infile2 == -1){
 		close (infile1);
@@ -176,7 +181,10 @@ int main(int argc, char *argv[]){
 	// O_CREAT -> Create if it does not exist
 	// O_TRUNC -> Empty the file if it exists
 	// PERM -> permissions
+
+	mode_t maskOutfile = umask(0); // Save mask
 	outfile = open(argv[3], O_CREAT | O_WRONLY | O_TRUNC, PERM);
+	umask(maskOutfile);
 
 	if (outfile == -1) {
 		perror("The output file could not be created!");
@@ -197,7 +205,9 @@ int main(int argc, char *argv[]){
 	close(outfile);
 
 	// Create estadisticas.csv
+	mode_t estadisticasMask = umask(0); // Save mask
 	size_t estadisticas = open("estadisticas.csv", O_WRONLY | O_CREAT | O_TRUNC, PERM);
+	umask(estadisticasMask);
 
 	// Creation of array of chars with enough space to save the concatenation of the data asked
 	// and then write it in 'estadisticas.csv' 
