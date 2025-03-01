@@ -29,7 +29,9 @@ int main(int argc, char *argv[]){
 	// open the third argument (outfile), read all 'alumnos' from both infile1
 	// and infile2 (nread), and write them in the third argument and in
 	// estadisticas.csv (nwrite)
-	ssize_t infile1, infile2, outfile, nread, nwrite;
+
+	int infile1 = -1, infile2 = -1, outfile = -1; // For file descriptors (open function) -> use int
+	ssize_t nread = -1, nwrite  = -1; // For read/write bytes
 
 	// Open the first file and check if it was opened correctly
 
