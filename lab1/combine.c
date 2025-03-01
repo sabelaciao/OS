@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-#define PERM 0644 // Default permissions for every file we create or we write to
+#define PERM 0644 // Gives permissions 'read' for everyone and 'write' only for the user (default)
 #define MAX_ALUMNS 100
 
 struct alumno{
@@ -30,8 +30,8 @@ int main(int argc, char *argv[]){
 	// and infile2 (nread), and write them in the third argument and in
 	// estadisticas.csv (nwrite)
 
-	int infile1 = -1, infile2 = -1, outfile = -1, estadisticas = -1; // For file descriptors (open function) -> use int
-	ssize_t nread = -1, nwrite  = -1; // For read/write bytes -> use ssize_t
+	int infile1 = -1, infile2 = -1, outfile = -1, estadisticas = -1; // For file descriptors -> int
+	ssize_t nread = -1, nwrite  = -1; // For reading/writing bytes -> ssize_t
 
 	// We will use the buffer. First, we need to know how many bytes
 	// has each 'alumno' so we get the exact number of them in each iteration
@@ -297,6 +297,7 @@ int main(int argc, char *argv[]){
 			return -1;
 		}
 	}
+
 	if (count == 0){
 		printf("There are no students to write in estadisticas.csv!!\n");
 	}
