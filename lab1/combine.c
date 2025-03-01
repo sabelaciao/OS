@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 	// and infile2 (nread), and write them in the third argument and in
 	// estadisticas.csv (nwrite)
 
-	int infile1 = -1, infile2 = -1, outfile = -1; // For file descriptors (open function) -> use int
+	int infile1 = -1, infile2 = -1, outfile = -1, estadisticas = -1; // For file descriptors (open function) -> use int
 	ssize_t nread = -1, nwrite  = -1; // For read/write bytes -> use ssize_t
 
 	// We will use the buffer. First, we need to know how many bytes
@@ -170,32 +170,6 @@ int main(int argc, char *argv[]){
 	// Close the second file
 	close(infile2);
 
-	// For 'estadisticas.csv' we need to to know the porcentage of each type of
-	// alumno divided by his/her grade. Then, we create an array to store
-	// how many F's (grades[0]), A's (grades[1]), N's (grades[2]), S's (grades[3])
-	// and M's (grades[4]) there are
-	int grades[5] = {0};
-
-	// Save how many students have 10 (M), 9 (S), N (8 or 7), A (6 or 5), F (less than 5)
-    for (int i = 0; i < count; i++){
-        switch (alumns[i].nota){
-            case 10:
-                grades[4]++;
-                break;
-            case 9:
-                grades[3]++;
-                break;
-            case 8: case 7:
-                grades[2]++;
-                break;
-            case 6: case 5:
-                grades[1]++;
-                break;
-            default:
-                grades[0]++;
-                break;
-        }
-    }
 
 	// Bubble sort by grade ('nota') in ascending order
 	for (int i = 0; i < count - 1; i++) {
@@ -229,6 +203,35 @@ int main(int argc, char *argv[]){
         }
     }
 
+
+	// For 'estadisticas.csv' we need to to know the porcentage of each type of
+	// alumno divided by his/her grade. Then, we create an array to store
+	// how many F's (grades[0]), A's (grades[1]), N's (grades[2]), S's (grades[3])
+	// and M's (grades[4]) there are
+	int grades[5] = {0};
+
+	// Save how many students have 10 (M), 9 (S), N (8 or 7), A (6 or 5), F (less than 5)
+    for (int i = 0; i < count; i++){
+        switch (alumns[i].nota){
+            case 10:
+                grades[4]++;
+                break;
+            case 9:
+                grades[3]++;
+                break;
+            case 8: case 7:
+                grades[2]++;
+                break;
+            case 6: case 5:
+                grades[1]++;
+                break;
+            default:
+                grades[0]++;
+                break;
+        }
+    }
+
+
 	// Write all students in the outfile
 
 	// FLAGS:
@@ -261,7 +264,7 @@ int main(int argc, char *argv[]){
 
 	// Create estadisticas.csv
 	mode_t estadisticasMask = umask(0); // Save mask
-	size_t estadisticas = open("estadisticas.csv", O_WRONLY | O_CREAT | O_TRUNC, PERM);
+	estadisticas = open("estadisticas.csv", O_WRONLY | O_CREAT | O_TRUNC, PERM);
 	umask(estadisticasMask);
 
 	// Creation of array of chars with enough space to save the concatenation of the data asked
