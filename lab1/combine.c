@@ -31,21 +31,7 @@ int main(int argc, char *argv[]){
 	// estadisticas.csv (nwrite)
 
 	int infile1 = -1, infile2 = -1, outfile = -1; // For file descriptors (open function) -> use int
-	ssize_t nread = -1, nwrite  = -1; // For read/write bytes
-
-	// Open the first file and check if it was opened correctly
-
-	// FLAGS:
-	// O_RDONLY -> Open the file for reading only!
-
-	mode_t mask1 = umask(0); // Save mask
-	infile1 = open(argv[1], O_RDONLY);
-	umask(mask1);
-
-	if (infile1 == -1){
-		perror("The first input file could not be opened");
-		return -1;
-	}
+	ssize_t nread = -1, nwrite  = -1; // For read/write bytes -> use ssize_t
 
 	// We will use the buffer. First, we need to know how many bytes
 	// has each 'alumno' so we get the exact number of them in each iteration
@@ -63,6 +49,22 @@ int main(int argc, char *argv[]){
 	int count = 0;
 
 
+
+
+	// Open the first file and check if it was opened correctly
+
+	// FLAGS:
+	// O_RDONLY -> Open the file for reading only!
+
+	mode_t mask1 = umask(0); // Save mask
+	infile1 = open(argv[1], O_RDONLY);
+	umask(mask1);
+
+	if (infile1 == -1){
+		perror("The first input file could not be opened");
+		return -1;
+	}
+
 	// We read all 'alumnos' from the file of the first argument (infile1)
 
 	while ((nread = read(infile1, buffer, bufferSize)) > 0){
@@ -72,7 +74,7 @@ int main(int argc, char *argv[]){
 			close(infile1);
 			return -1;
 		}
-		
+
 		// Copy buffer content to alumns[count]
 		memcpy(&alumns[count], buffer, bufferSize);
 
