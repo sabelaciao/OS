@@ -277,21 +277,27 @@ int main(int argc, char *argv[]){
 
 	// Create the string as asked. If count is 0, we should not do anything as in the grades part,
 	// it will divide by 0!
-	if (count > 0){
-		for(int i = 4; i >= 0; i--){
+	for(int i = 4; i >= 0; i--){
+		if (count > 0) {
 			// Concatenate all data as asked in the statement in 'result' char array
 			sprintf(result, "%c;%d;%.2f%%\n", differentGrades[i], grades[i], (double)(grades[i]*100)/count);
 
-			// Write in estadisticas.csv file
-			// We use strlen sice sizeof returns 20, as it returns the size of all the char array
-			// We are only interested in those characters that are not the empty ones ('\0')
-			if (write(estadisticas, result, strlen(result)) == -1){
-				perror("Error writing in estadisticas.csv");
-				close(estadisticas);
-				return -1;
-			}
+		} else {
+			// If there are not any alumnos, just write in estadisticas.csv that all differente
+			// types of grades have 0% of alumnos
+			sprintf(result, "%c;%d;0.00%%\n", differentGrades[i], grades[i]);
 		}
-	} else {
+
+		// Write in estadisticas.csv file
+		// We use strlen sice sizeof returns 20, as it returns the size of all the char array
+		// We are only interested in those characters that are not the empty ones ('\0')
+		if (write(estadisticas, result, strlen(result)) == -1){
+			perror("Error writing in estadisticas.csv");
+			close(estadisticas);
+			return -1;
+		}
+	}
+	if (count == 0){
 		printf("There are no students to write in estadisticas.csv!!\n");
 	}
 
