@@ -36,14 +36,14 @@ int main(int argc, char *argv[]) {
     // O_TRUNC -> Truncate (empty) a file if it already exists.
     fd = open(argv[1], O_CREAT | O_EXCL | O_TRUNC, mode);
 
-    // Get back the old umask
-    umask(varmask);
-
     if (fd == -1){
         printf("There has been an error creating the file: %d\n", errno);
         return -1;
     }
 
+    // Get back the old umask
+    umask(varmask);
+    
     // Ensure correct permissions
     if (chmod(argv[1], mode) == -1) {
         perror("Error setting file permissions");
