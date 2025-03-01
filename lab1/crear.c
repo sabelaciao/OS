@@ -41,15 +41,15 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Get back the old umask
+    // Get back the old mask
     umask(varmask);
-    
+
     // Ensure correct permissions
     if (chmod(argv[1], mode) == -1) {
         perror("Error setting file permissions");
         close(fd);
         return -1;
-    }
+    }  
 
     // Close the file
     close(fd);

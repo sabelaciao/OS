@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-#define PERM 0644 // permissions
+#define PERM 0644 // Default permissions for every file we create or we write to
 #define MAX_ALUMNS 100
 
 struct alumno{
@@ -21,7 +21,7 @@ struct alumno{
 int main(int argc, char *argv[]){
 	// The function must be called with 4 arguments, as asked in the statement!!
     if (argc != 4){ 
-        perror("The number of arguments are not exact!");
+        printf("The number of arguments are not exact!");
     	return -1;
     }
 
@@ -54,23 +54,49 @@ int main(int argc, char *argv[]){
 	// Creation of the buffer with the size of each 'alumno'
 	char buffer[bufferSize];
 
-	// Create of a struct of 'alumno' type with 100 empty spots
-	struct alumno alumns[MAX_ALUMNS];
+	// Create of a struct of 'alumno' type with 100 spots that by default have an empty name,
+	// and name and convocatoria equal to -1. This is used to handle errors later when
+	// reading 'alumnos'
+	struct alumno alumns[MAX_ALUMNS] = {{"", -1, -1}};
 
 	// Used to count the number of 'alumnos'
 	int count = 0;
 
 
-	// We read all 'alumnos' from the file of the first argument
+	// We read all 'alumnos' from the file of the first argument (infile1)
+
 	while ((nread = read(infile1, buffer, bufferSize)) > 0){
 		// If we count 100 'alumnos', we should exit the program!
 		if (count >= 100) {
-			perror("Error: there can't be more than 100 students!!");
+			printf("Error: there can't be more than 100 students!!");
 			close(infile1);
 			return -1;
 		}
+		
 		// Copy buffer content to alumns[count]
 		memcpy(&alumns[count], buffer, bufferSize);
+
+		// Check if the grades of the alumn is between 0 and 10
+		if (alumns[count].nota < 0 || alumns[count].nota > 10){
+			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10", alumns[count].nombre);
+			close(infile1);
+			return -1;
+		}
+
+		// Check if the name of the alumno is not empty
+		if (strlen(alumns[count].nombre) == 0){
+			printf("Error: there is a student without name!");
+			close(infile1);
+			return -1;
+		}
+
+		// Check if the convocatoria of an alumno is bigger than 0
+		if (alumns[count].convocatoria <= 0){
+			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0", alumns[count].nombre);
+			close(infile1);
+			return -1;
+		}
+
 		count++;
 	}
 
@@ -95,16 +121,41 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	// We read all 'alumnos' from the file of the second argument
+
+	// We read all 'alumnos' from the file of the second argument (infile2)
+
 	while ((nread = read(infile2, buffer, bufferSize)) > 0){
 		// If we count 100 'alumnos', we should exit the program!
 		if (count >= 100) {
-			perror("Error: there can't be more than 100 students!!");
+			printf("Error: there can't be more than 100 students!!");
 			close(infile2);
 			return -1;
 		}
+
 		// Copy buffer content to alumns[count]
 		memcpy(&alumns[count], buffer, bufferSize);
+
+		// Check if the grades of the alumn is between 0 and 10
+		if (alumns[count].nota < 0 || alumns[count].nota > 10){
+			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10", alumns[count].nombre);
+			close(infile2);
+			return -1;
+		}
+
+		// Check if the name of the alumno is not empty
+		if (strlen(alumns[count].nombre) == 0){
+			printf("Error: here is a student without name!");
+			close(infile2);
+			return -1;
+		}
+
+		// Check if the convocatoria of an alumno is bigger than 0
+		if (alumns[count].convocatoria <= 0){
+			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0", alumns[count].nombre);
+			close(infile2);
+			return -1;
+		}
+
 		count++;
 	}
 
@@ -154,7 +205,7 @@ int main(int argc, char *argv[]){
                 alumns[j + 1] = temp;
             } 
 			
-			// If 'nota' is the same, sort by 'convocatoria'  in ascending order
+			// If 'nota' is the same, sort by 'convocatoria' in ascending order
             else if (alumns[j].nota == alumns[j + 1].nota) {
                 if (alumns[j].convocatoria > alumns[j + 1].convocatoria) {
                     // Swap myAlumn[j] and myAlumn[j + 1]
