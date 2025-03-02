@@ -21,7 +21,7 @@ struct alumno{
 int main(int argc, char *argv[]){
 	// The function must be called with 4 arguments, as asked in the statement!!
     if (argc != 4){ 
-        printf("The number of arguments are not exact!");
+        printf("The number of arguments is not exact!");
     	return -1;
     }
 
