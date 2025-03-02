@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     // The function must be called with 3 arguments, as asked in the statement!!
     if (argc != 3){ 
-        perror("The number of arguments is not exact!");
+        perror("The number of arguments is not exact!\n");
         return -1;
     }
 
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     
     // Transform 'mode' argument to octal and checks if it's valid
     if (sscanf(argv[2], "%o", &mode) != 1) {
-        perror("The input could not be converted to octal");
+        perror("The input could not be converted to octal\n");
         return -1;
     }
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
 
     // Create the file
-    int fd = -1;
+    int fd = -1, ret = -1;
     // FLAGS USED:
     // O_EXCL -> Ensure that a file is only created if it does not already exist. If it does, it loads an error in 'errno' variable
     // O_CREAT ->  Creates the file if it does not exist.
@@ -46,13 +46,19 @@ int main(int argc, char *argv[]) {
 
     // Ensure correct permissions
     if (chmod(argv[1], mode) == -1) {
-        perror("Error setting file permissions");
+        perror("Error setting file permissions\n");
         close(fd);
         return -1;
     }  
 
     // Close the file
-    close(fd);
+    ret = close(fd);
 
+    if (ret == -1){
+        perror("Error closing the file\n");
+        return -1;
+    }
+
+    printf("The file has been created succesfully! :D\n");
     return 0;
 }

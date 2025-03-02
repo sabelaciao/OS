@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 	// and infile2 (nread), and write them in the third argument and in
 	// estadisticas.csv (nwrite)
 
-	int infile1 = -1, infile2 = -1, outfile = -1, estadisticas = -1; // For file descriptors -> int
+	int infile1 = -1, infile2 = -1, outfile = -1, estadisticas = -1, ret = -1; // For file descriptors -> int
 	ssize_t nread = -1, nwrite  = -1; // For reading/writing bytes -> ssize_t
 
 	// We will use the buffer. First, we need to know how many bytes
@@ -109,7 +109,12 @@ int main(int argc, char *argv[]){
 	}
 
 	// Close the first file
-	close(infile1);
+	ret = close(infile1);
+
+	if (ret == -1){
+        perror("Error closing the first file\n");
+        return -1;
+    }
 
 
 	// Open the second file and check if it was opened correctly
@@ -168,7 +173,12 @@ int main(int argc, char *argv[]){
 	}
 
 	// Close the second file
-	close(infile2);
+	ret = close(infile2);
+
+	if (ret == -1){
+        perror("Error closing the second file\n");
+        return -1;
+    }
 
 
 	// Bubble sort by grade ('nota') in ascending order
@@ -260,7 +270,12 @@ int main(int argc, char *argv[]){
     }
 
 	// Close output file
-	close(outfile);
+	ret = close(outfile);
+
+	if (ret == -1){
+        perror("Error closing the output file\n");
+        return -1;
+    }
 
 	// Create estadisticas.csv
 	mode_t estadisticasMask = umask(0); // Save mask
@@ -292,7 +307,7 @@ int main(int argc, char *argv[]){
 		// We use strlen sice sizeof returns 20, as it returns the size of all the char array
 		// We are only interested in those characters that are not the empty ones ('\0')
 		if (write(estadisticas, result, strlen(result)) == -1){
-			perror("Error writing in estadisticas.csv");
+			perror("Error writing in estadisticas.csv\n");
 			close(estadisticas);
 			return -1;
 		}
@@ -303,7 +318,13 @@ int main(int argc, char *argv[]){
 	}
 
 	// Close 'estadisticas.csv' file!
-	close(estadisticas);
+	ret = close(estadisticas);
 
+	if (ret == -1){
+        perror("Error closing estadisticas file\n");
+        return -1;
+    }
+
+	printf("The program worked succesfully! :D\n");
 	return 0;
 }
