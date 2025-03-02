@@ -21,7 +21,7 @@ struct alumno{
 int main(int argc, char *argv[]){
 	// The function must be called with 4 arguments, as asked in the statement!!
     if (argc != 4){ 
-        printf("The number of arguments is not exact!");
+        printf("The number of arguments is not exact!\n");
     	return -1;
     }
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
 	umask(mask1);
 
 	if (infile1 == -1){
-		perror("The first input file could not be opened");
+		perror("The first input file could not be opened\n");
 		return -1;
 	}
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
 	while ((nread = read(infile1, buffer, bufferSize)) > 0){
 		// If we count 100 'alumnos', we should exit the program!
 		if (count >= 100) {
-			printf("Error: there can't be more than 100 students!!");
+			printf("Error: there can't be more than 100 students!!\n");
 			close(infile1);
 			return -1;
 		}
@@ -80,21 +80,21 @@ int main(int argc, char *argv[]){
 
 		// Check if the grades of the alumn is between 0 and 10
 		if (alumns[count].nota < 0 || alumns[count].nota > 10){
-			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10", alumns[count].nombre);
+			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10\n", alumns[count].nombre);
 			close(infile1);
 			return -1;
 		}
 
 		// Check if the name of the alumno is not empty
 		if (strlen(alumns[count].nombre) == 0){
-			printf("Error: there is a student without name!");
+			printf("Error: there is a student without name!\n");
 			close(infile1);
 			return -1;
 		}
 
 		// Check if the convocatoria of an alumno is bigger than 0
 		if (alumns[count].convocatoria <= 0){
-			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0", alumns[count].nombre);
+			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0\n", alumns[count].nombre);
 			close(infile1);
 			return -1;
 		}
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]){
 
 	// In case there has been an error reading any alumno from first file
 	if (nread == -1){
-		printf("An error has ocurred reading the first file!");
+		printf("An error has ocurred reading the first file!\n");
 		return -1;
 	}
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
 
 	if (infile2 == -1){
 		close (infile1);
-		perror("The second input file could not be opened");
+		perror("The second input file could not be opened\n");
 		return -1;
 	}
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]){
 	while ((nread = read(infile2, buffer, bufferSize)) > 0){
 		// If we count 100 'alumnos', we should exit the program!
 		if (count >= 100) {
-			printf("Error: there can't be more than 100 students!!");
+			printf("Error: there can't be more than 100 students!!\n");
 			close(infile2);
 			return -1;
 		}
@@ -144,21 +144,21 @@ int main(int argc, char *argv[]){
 
 		// Check if the grades of the alumn is between 0 and 10
 		if (alumns[count].nota < 0 || alumns[count].nota > 10){
-			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10", alumns[count].nombre);
+			printf("Error: alumno with name %s can't have a grade lower than 0 or bigger than 10\n", alumns[count].nombre);
 			close(infile2);
 			return -1;
 		}
 
 		// Check if the name of the alumno is not empty
 		if (strlen(alumns[count].nombre) == 0){
-			printf("Error: here is a student without name!");
+			printf("Error: here is a student without name!\n");
 			close(infile2);
 			return -1;
 		}
 
 		// Check if the convocatoria of an alumno is bigger than 0
 		if (alumns[count].convocatoria <= 0){
-			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0", alumns[count].nombre);
+			printf("Error: alumno with name %s can't have a convocatoria less or equal than 0\n", alumns[count].nombre);
 			close(infile2);
 			return -1;
 		}
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]){
 
 	// In case there has been an error reading any alumno from second file
 	if (nread == -1){
-		printf("An error has ocurred reading the second file!");
+		printf("An error has ocurred reading the second file!\n");
 		return -1;
 	}
 
@@ -255,7 +255,7 @@ int main(int argc, char *argv[]){
 	umask(maskOutfile);
 
 	if (outfile == -1) {
-		perror("The output file could not be created!");
+		perror("The output file could not be created!\n");
 		return -1;
 	}
 	
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]){
 		// Write each saved alumno
         nwrite = write(outfile, &alumns[i], sizeof(alumns[i]));
         if (nwrite == -1){
-            perror("Error writing to the output file");
+            perror("Error writing to the output file\n");
 			close(outfile);
             return -1;
         }
