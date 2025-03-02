@@ -43,7 +43,14 @@ int main(int argc, char *argv[]){
 	// Create of a struct of 'alumno' type with 100 spots that by default have an empty name,
 	// and name and convocatoria equal to -1. This is used to handle errors later when
 	// reading 'alumnos'
-	struct alumno alumns[MAX_ALUMNS] = {{"", -1, -1}};
+	struct alumno alumns[MAX_ALUMNS];
+
+	for (int i = 0; i < MAX_ALUMNS; i++) {
+        strcpy(alumns[i].nombre, "");  // Initialize name as empty string
+        alumns[i].nota = -1; // Initialize nota to -1
+        alumns[i].convocatoria = -1; // Initialize convocatoria to -1
+    }
+
 
 	// Used to count the number of 'alumnos'
 	int count = 0;
