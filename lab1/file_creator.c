@@ -20,14 +20,11 @@ int main(int argc, char ** argv) {
     // struct alumnos lista[] = {
     //     {"Juan Perez", 5, 1},
     //     {"Maria Lopez", 9, 2},
-    //     {"Carlos Garcia", 7, 1},
+    //     {"Carlos Garcia", 7, 3},
     //     {"Ana Fernandez", 4, 3}
     // };
     struct alumnos lista[] = {
-        {"Pedro Perez", 8, 1},
-        {"Carlos Lopez", 9, 2},
-        {"Alfonos Garcia", 7, 1},
-        {"Maribel Fernandez", 5, 3}
+        {"", 7, 5},
     };
 
     int num_alumnos = sizeof(lista) / sizeof(lista[0]);

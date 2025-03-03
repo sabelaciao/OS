@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     // The function must be called with 3 arguments, as asked in the statement!!
     if (argc != 3){ 
-        perror("The number of arguments is not exact!\n");
+        perror("Error: the number of arguments is not exact!\n");
         return -1;
     }
 

@@ -21,7 +21,7 @@ struct alumno{
 int main(int argc, char *argv[]){
 	// The function must be called with 4 arguments, as asked in the statement!!
     if (argc != 4){ 
-        printf("The number of arguments is not exact!\n");
+        printf("Error: the number of arguments is not exact!\n");
     	return -1;
     }
 
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]){
 
 		// Check if the name of the alumno is not empty
 		if (strlen(alumns[count].nombre) == 0){
-			printf("Error: here is a student without name!\n");
+			printf("Error: there is a student without name!\n");
 			close(infile2);
 			return -1;
 		}
