@@ -30,7 +30,9 @@ int main(int argc, char **argv) {
     char c;
     int i = 0;
     char buffer[1024];
-    while (read(fd, &c, 1) == 1) {
+    ssize_t nread = -1;
+
+    while ((nread = read(fd, &c, 1)) > 0) {
         if (c == '\n') {
             buffer[i] = '\0';
             if (strstr(buffer, argv[2]) != NULL) {
@@ -48,9 +50,16 @@ int main(int argc, char **argv) {
     buffer[i] = '\0';
     if (strstr(buffer, argv[2]) != NULL) {
         printf("%s\n", buffer);
-    } else {
+    } else {    
         printf("\"%s\" not found.\n", argv[2]);
     }
+    
+    // In case there has been an error reading
+	if (nread == -1){
+		printf("An error has ocurred reading!\n");
+		return -1;
+	}
+
     close(fd);
     return 0;
 }
