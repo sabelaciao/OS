@@ -15,7 +15,8 @@ const int max_commands = 10;
 /* VARS TO BE USED FOR THE STUDENTS */
 char * argvv[max_args];
 char * filev[max_redirections];
-int background = 0; 
+int background = 0;
+int totalPipes[9][2]; // max 10 commands (9) y 2 porque puede ser READ o WRITE
 
 /**
  * This function splits a char* line into different tokens based on a given character
@@ -81,6 +82,13 @@ int procesar_linea(char *linea) {
         *pos = '\0';
     }
 
+    // Create all pipes that will be used
+    for (int i = 0; i < num_comandos - 1; i++){
+        if (pipe(totalPipes[i] < 0)){
+            perror("Error creating the pipes");
+            exit(EXIT_FAILURE); // Used when a pipe creation process has failed
+        }
+    }
     //Finish processing
     for (int i = 0; i < num_comandos; i++) {
         int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args);
@@ -128,17 +136,43 @@ int main(int argc, char *argv[]) {
     // Read the file
 
     char buffer[max_line]; // Buffer
+    char c; // pointer to get each character
     size_t i = 0; // unsinged integer. It's better for buffer indexing since it avoids negative values
     ssize_t nread = -1;
     char ssoo[] = "## Script de SSOO";
+    int checkSSOO = 1;
 
-    if ((nread = read(fd, &buffer, sizeof(ssoo)-1)) > 0) {
-        if (strcmp(ssoo, buffer) != 0){ // Check if the first line is "## Script de SSOO"
-            perror("The first line is not \"## Script de SSOO\"");
-            close(fd);
-            exit(-1);
+    
+    while ((nread = read(fd, &c, 1)) > 0) {
+        if (c == '\n') {
+            buffer[i] = '\0';
+
+            if (buffer[0] == '\0'){
+                perror("There is an empty line!");
+                close(fd);
+                exit(-1);
+            }
+
+            if (checkSSOO == 1) {
+                if (strcmp(ssoo, buffer) != 0){ // Check if the first line is "## Script de SSOO"
+                    perror("The first line is not \"## Script de SSOO\"");
+                    close(fd);
+                    exit(-1);
+                }
+                checkSSOO = 0;
+            } else {
+                procesar_linea(buffer); // Only passed until the first \0
+            }
+
+            i = 0; // Reset the index for the next line
+
+        } else {
+            buffer[i] = c;
+            i++; // points to the next available position in the buffer
         }
     }
+
+    
         
     // In case there has been an error reading
     if (nread < 0){
