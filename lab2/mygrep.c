@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#define default_buffer_size 1024
+
 int main(int argc, char **argv) {
     // Check the number of arguments
     if (argc != 3) {
@@ -28,7 +30,7 @@ int main(int argc, char **argv) {
     int found = 0; // flag to just to display the message if the string was found
 
     // Dynamic buffer allocation (start with size 1024, later we reallocate if necessary)
-    size_t buffer_size = 1024;
+    size_t buffer_size = default_buffer_size;
 
     // Allocate 1024 bytes to the pointer 'buffer'
     char *buffer = (char *)malloc(buffer_size);
