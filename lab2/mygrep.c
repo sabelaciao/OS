@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     }
 
     // Read the file
-    char c; // pointer to reach each character
+    char c; // pointer to get each character
     size_t i = 0; // unsinged integer. It's better for buffer indexing since it avoids negative values
     ssize_t nread = -1;
     int found = 0; // flag to just to display the message if the string was found
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     while ((nread = read(fd, &c, 1)) > 0) { // Read each character and store it in 'c'
         // Expand buffer dynamically if needed
         if (i >= buffer_size - 1) {
-            size_t new_size = buffer_size * 2; // why *2? Doubling is LOGARITHMIC! It's better than summing one by one
+            size_t new_size = buffer_size * 2; // why *2? Doubling is logarithmic! It's better than summing one by one
                                                // since you do not need to realloc IN EACH ITERATION, which is slow.
                                                // Note that realloc copies the old data, in a larger block. It wastes
                                                // A LOT of time. Unused space is at most 50%, which is small compared
@@ -72,7 +72,8 @@ int main(int argc, char **argv) {
             buffer[i] = '\0';
             if (strstr(buffer, argv[2]) != NULL) { // strstr finds the first ocurrence of a substring inside a string
                 found = 1;
-                printf("%s\n", buffer);
+                write(STDOUT_FILENO, buffer, strlen(buffer)); // Print the line
+                write(STDOUT_FILENO, "\n", 1);  // Print newline
             }
             i = 0; // we reset the index where we write in the buffer
         } else {
