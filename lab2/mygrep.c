@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     }
         
     // In case there has been an error reading
-    if (nread == -1){
+    if (nread < 0){
         perror("An error has occurred reading the file!");
         free(buffer);
         close(fd);
