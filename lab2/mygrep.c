@@ -12,7 +12,8 @@
 int main(int argc, char **argv) {
     // Check the number of arguments
     if (argc != 3) {
-        perror("Usage: ./mygrep <file> <string>");
+        errno = EINVAL; // Set 'errno' variable to "Invalid argument"
+        perror("Error: incorrect number of arguments. Usage: ./mygrep <file> <string>");
         exit(-1);
     }
 
