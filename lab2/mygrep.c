@@ -16,15 +16,15 @@
     int main(int argc, char **argv) {
         // check the number of arguments
         if (argc != 3) {
-            fprintf("Usage: %s <file> <string>\n", argv[0]);
-            return -1;
+            perror("Usage: ./mygrep <file> <string>");
+            exit(-1);
         }
 
         // Open the file
         int fd = open(argv[1], O_RDONLY);
         if (fd == -1) {
             perror("Error opening the file");
-            return -1;
+            exit(-1);
         }
 
         // Read the file
@@ -33,17 +33,17 @@
         ssize_t nread = -1;
         int found = 0; // flag to just to display the message if the string was found
 
-        // Dynamic buffer allocation (start with size 1)
-        size_t buffer_size = 1;
+        // Dynamic buffer allocation (start with size 1024, later we reallocate if necessary)
+        size_t buffer_size = 1024;
 
-        // Allocate one byte to the pointer 'buffer'
+        // Allocate 1024 bytes to the pointer 'buffer'
         char *buffer = (char *)malloc(buffer_size);
 
         // If malloc fails, it returns NULL
         if (!buffer) {
             perror("Memory allocation failed");
             close(fd);
-            return -1;
+            exit(-1);
         }
 
         while ((nread = read(fd, &c, 1)) > 0) {
@@ -65,7 +65,7 @@
                     perror("Memory reallocation failed");
                     free(buffer);
                     close(fd);
-                    return -1;
+                    exit(-1);
                 }
                 buffer = new_buffer; // now update the buffer safely
                 buffer_size = new_size; // and update the buffer size also safely
@@ -80,11 +80,10 @@
                 }
                 i = 0; // we reset the index where we write in the buffer
             } else {
-                if (i < sizeof(buffer) - 1) { // Just write if there is space in the buffer. If not, it will be
-                                            // rellocated later
-                    buffer[i] = c;
-                    i++; // points to the next available position in the buffer
-                }
+                // Just write if there is space in the buffer. If not, it will be
+                // rellocated later
+                buffer[i] = c;
+                i++; // points to the next available position in the buffer
             }
         }
 
@@ -97,8 +96,10 @@
         
         // In case there has been an error reading
         if (nread == -1){
-            perror("An error has ocurred reading!\n");
-            return -1;
+            perror("An error has occurred reading the file!");
+            free(buffer);
+            close(fd);
+            exit(-1);
         }
 
         if (found == 0){
@@ -106,6 +107,8 @@
         }
 
         close(fd);
+        free(buffer);
+
         return 0;
     }
 
