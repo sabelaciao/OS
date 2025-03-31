@@ -97,7 +97,7 @@ int procesar_linea(char *linea) {
         printf("Background = %d\n", background);
         if(filev[0] != NULL)
             printf("Redir [IN] = %s\n", filev[0]);
-        if(filev[1] != NULL)
+        if(filev[1] != NULL)    
             printf("Redir [OUT] = %s\n", filev[1]);
         if(filev[2] != NULL)
             printf("Redir [ERR] = %s\n", filev[2]);
@@ -113,5 +113,40 @@ int main(int argc, char *argv[]) {
     char example_line[] = "ls -l | grep scripter | wc -l > redir_out.txt &";
     int n_commands = procesar_linea(example_line);
     
+    if (argc != 2) {
+        perror("Error: incorrect number of arguments. Usage: ./scripter <script_file_with_commands>");
+        exit(-1);
+    }
+
+    // Open the file
+    int fd = open(argv[1], O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening the file");
+        exit(-1);
+    }
+
+    // Read the file
+
+    char buffer[max_line]; // Buffer
+    size_t i = 0; // unsinged integer. It's better for buffer indexing since it avoids negative values
+    ssize_t nread = -1;
+    char ssoo[] = "## Script de SSOO";
+
+    if ((nread = read(fd, &buffer, sizeof(ssoo)-1)) > 0) {
+        if (strcmp(ssoo, buffer) != 0){ // Check if the first line is "## Script de SSOO"
+            perror("The first line is not \"## Script de SSOO\"");
+            close(fd);
+            exit(-1);
+        }
+    }
+        
+    // In case there has been an error reading
+    if (nread < 0){
+        perror("An error has occurred reading the file!");
+        free(buffer);
+        close(fd);
+        exit(-1);
+    }
+
     return 0;
 }
