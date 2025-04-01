@@ -20,4 +20,4 @@ mygrep: mygrep.o
 	$(CC) $(FLAGS) -L. -o $@ $< $(LIBS)
 
 clean:
-	rm -f ./scripter.o ./scripter ./mygrep.o, ./mygrep
+	rm -f ./scripter.o ./scripter ./mygrep.o ./mygrep

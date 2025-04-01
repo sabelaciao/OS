@@ -89,7 +89,7 @@ int procesar_linea(char *linea) {
 
     // Create all pipes that will be used
     for (int i = 0; i < num_comandos - 1; i++){
-        if (pipe(totalPipes[i] < 0)){
+        if (pipe(totalPipes[i]) < 0){
             perror("Error creating the pipes");
             exit(EXIT_FAILURE); // Used when a pipe creation process has failed
         }
@@ -99,27 +99,6 @@ int procesar_linea(char *linea) {
     for (int i = 0; i < num_comandos; i++) {
         int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args); // Tokenize (divide) each command and store in argvv
         procesar_redirecciones(argvv);
-
-        // QUITAR ESTO LUEGO
-
-        /********* This piece of code prints the command, args, redirections and background. **********/
-        /*********************** REMOVE BEFORE THE SUBMISSION *****************************************/
-        /*********************** IMPLEMENT YOUR CODE FOR PROCESSES MANAGEMENT HERE ********************/
-        printf("Comando = %s\n", argvv[0]);
-        for(int arg = 1; arg < max_args; arg++)
-            if(argvv[arg] != NULL)
-                printf("Args = %s\n", argvv[arg]); 
-                
-        printf("Background = %d\n", background);
-        if(filev[0] != NULL)
-            printf("Redir [IN] = %s\n", filev[0]);
-        if(filev[1] != NULL)    
-            printf("Redir [OUT] = %s\n", filev[1]);
-        if(filev[2] != NULL)
-            printf("Redir [ERR] = %s\n", filev[2]);
-        /**********************************************************************************************/
-
-        // QUITAR ESTO LUEGO
     }
 
     for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
@@ -181,16 +160,21 @@ int procesar_linea(char *linea) {
                                                          // A command writing to STDOUT: should use a WRITE pipe.
             }
 
-            execvp(argvv[i], argvv); // argvv[i] is the command to execute (in our case, the i-th command in the PIPELINE!!). argvv is the array that contains the arguments for argvv[i].
-            perror("Exec failed"); // In case the execution of the command fails
-            exit(EXIT_FAILURE);
+            if (execvp(argvv[0], argvv) < 0) {
+                perror("Exec failed");
+                _exit(EXIT_FAILURE);
+            }
+
+            //execvp(argvv[0], argvv); // argvv[i] is the command to execute (in our case, the i-th command in the PIPELINE!!). argvv is the array that contains the arguments for argvv[i].
+            //perror("Exec failed"); // In case the execution of the command fails
+            //exit(EXIT_FAILURE);
         }
 
         if (background == 0) { // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
             printf("Foreground (child) process started with PID: %d\n", pid);
             waitpid(pid, NULL, 0); // The parent process waits for the child process to finish (if child is foreground)
         } else {
-            printf("Background process started with PID: %d\n", pid);
+            printf("Background process (child) started with PID: %d\n", pid);
         }
     }
 
@@ -239,6 +223,10 @@ int main(int argc, char *argv[]) {
 
     
     while ((nread = read(fd, &c, 1)) > 0) {
+        if (nread == 0) {
+            break;  // End of file reached, exit the loop.
+        }
+
         if (c == '\n') {
             buffer[i] = '\0';
 
@@ -270,7 +258,6 @@ int main(int argc, char *argv[]) {
     // In case there has been an error reading
     if (nread < 0){
         perror("An error has occurred reading the file!");
-        free(buffer);
         close(fd);
         exit(-1);
     }
