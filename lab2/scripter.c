@@ -11,11 +11,14 @@ const int max_line = 1024;
 const int max_commands = 10;
 #define max_redirections 3 //stdin, stdout, stderr
 #define max_args 15
+#define READ  0  // Pipe read
+#define WRITE 1  // Pipe write 
+
 
 /* VARS TO BE USED FOR THE STUDENTS */
 char * argvv[max_args];
 char * filev[max_redirections];
-int background = 0;
+int background = 0; // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
 int totalPipes[9][2]; // max 10 commands (9 pipes) y 2 porque puede ser READ o WRITE
 
 /**
@@ -95,6 +98,8 @@ int procesar_linea(char *linea) {
         int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args); // Tokenize (divide) each command and store in argvv
         procesar_redirecciones(argvv);
 
+        // QUITAR ESTO LUEGO
+
         /********* This piece of code prints the command, args, redirections and background. **********/
         /*********************** REMOVE BEFORE THE SUBMISSION *****************************************/
         /*********************** IMPLEMENT YOUR CODE FOR PROCESSES MANAGEMENT HERE ********************/
@@ -111,64 +116,81 @@ int procesar_linea(char *linea) {
         if(filev[2] != NULL)
             printf("Redir [ERR] = %s\n", filev[2]);
         /**********************************************************************************************/
+
+        // QUITAR ESTO LUEGO
     }
 
-    for (int i = 0; i < num_comandos; i++) {
-        pid_t pid = fork();
+    for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
+        pid_t pid = fork(); // Creation of child process for each command
         if (pid == -1) {
             perror("Fork failed");
             exit(EXIT_FAILURE);
         }
     
         if (pid == 0) { // Child process
-            if (i > 0) { 
-                dup2(totalPipes[i - 1][0], STDIN_FILENO);
-                close(totalPipes[i - 1][0]);
+            if (i > 0) { // IF ITS NOT THE FIRST COMMAND, set STDIN (standard input) to read from the previous pipe
+                dup2(totalPipes[i - 1][READ], STDIN_FILENO); // dup2 makes STDIN to read from totalPipes[i-1] (previous pipe's READ end)
+                close(totalPipes[i - 1][READ]); // Close the READ end after reading
             }
-            if (i < num_comandos - 1) { 
-                dup2(totalPipes[i][1], STDOUT_FILENO);
-                close(totalPipes[i][1]);
+            if (i < num_comandos - 1) { // IF IT'S NOT THE LAST COMMAND, set STDOUT to write to the NEXT Pipe
+                dup2(totalPipes[i][WRITE], STDOUT_FILENO); //dup2 makes STDOUT to WRITE to totalPipes[i] (CURRENT pipe's WRITE end)
+                close(totalPipes[i][WRITE]); // Close the WRITE after writing
             }
     
-            if (filev[0]) {
-                int fd = open(filev[0], O_RDONLY);
-                if (fd < 0) { perror("Error opening input file"); exit(EXIT_FAILURE); }
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-            if (filev[1]) {
-                int fd = open(filev[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                if (fd < 0) { perror("Error opening output file"); exit(EXIT_FAILURE); }
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-            }
-            if (filev[2]) {
-                int fd = open(filev[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                if (fd < 0) { perror("Error opening error file"); exit(EXIT_FAILURE); }
-                dup2(fd, STDERR_FILENO);
+            // filev[0] --> stores INPUT redirection file (< filename)
+            if (filev[0]) { // If there exists an INPUT redirection file...
+                int fd = open(filev[0], O_RDONLY); // OPEN THAT FILE, only for reading, because it's an input
+                if (fd < 0) {
+                    perror("Error opening input file");
+                    exit(EXIT_FAILURE);
+                }
+                dup2(fd, STDIN_FILENO); // The funcion 'dup2' in this case redirects the standard input (STDIN) to come from the file 'fd' instead of keyboard
                 close(fd);
             }
 
-            for (int i = 0; i < num_comandos - 1; i++) { // Close all pipes in CHILD process
-                close(totalPipes[i][0]);
-                close(totalPipes[i][1]);
+            // filev[1] --> stores OUTPUT redirection files (> filename)
+            if (filev[1]) { // If there exists an OUTPUT redirection file...
+                int fd = open(filev[1], O_WRONLY | O_CREAT | O_TRUNC, 0644); // OPEN THAT FILE (flags of writing, because it's an output)
+                if (fd < 0) {
+                    perror("Error opening output file"); 
+                    exit(EXIT_FAILURE); 
+                }
+                dup2(fd, STDOUT_FILENO); // The funcion 'dup2' in this case redirects the standard output (STDOUT) to come from the file 'fd' instead of keyboard
+                close(fd);
             }
 
-            execvp(argvv[i][0], argvv[i]);
-            perror("Exec failed");
+            // filev[2] --> stores ERROR redirection files (!> filename)
+            if (filev[2]) { // If there exists an ERROR redirection file...
+                int fd = open(filev[2], O_WRONLY | O_CREAT | O_TRUNC, 0644); // OPEN THAT FILE (flags of writing, in that file the errors will be written)
+                if (fd < 0) {
+                    perror("Error opening error file");
+                    exit(EXIT_FAILURE); 
+                }
+                dup2(fd, STDERR_FILENO); // The funcion 'dup2' in this case redirects the standard error (STDERR) to come from a file instead of keyboard
+                close(fd);
+            }
+
+            for (int i = 0; i < num_comandos - 1; i++) { // Close all pipes inside the CHILD process to ensure that the child only interacts with its own required pipe
+                close(totalPipes[i][READ]);              // NOTE that each child only uses one end of one pipe:
+                close(totalPipes[i][WRITE]);             // A command reading from STDIN:  should use a READ pipe.
+                                                         // A command writing to STDOUT: should use a WRITE pipe.
+            }
+
+            execvp(argvv[i], argvv); // argvv[i] is the command to execute (in our case, the i-th command in the PIPELINE!!). argvv is the array that contains the arguments for argvv[i].
+            perror("Exec failed"); // In case the execution of the command fails
             exit(EXIT_FAILURE);
         }
 
-        if (background == 0) {
-            waitpid(pid, NULL, 0);
+        if (background == 0) { // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
+            waitpid(pid, NULL, 0); // The parent process waits for the child process to finish.
         } else {
             printf("Background process started with PID: %d\n", pid);
         }
     }
 
-    for (int i = 0; i < num_comandos - 1; i++) { // Close all pipes of PARENT process
-        close(totalPipes[i][0]);
-        close(totalPipes[i][1]);
+    for (int i = 0; i < num_comandos - 1; i++) { // The PARENT process also needs to close all pipes!! The parenthe parent is the one that creates the pipes, but it will not be directly using them! 
+        close(totalPipes[i][READ]);
+        close(totalPipes[i][WRITE]);
     }
 
     return num_comandos;
