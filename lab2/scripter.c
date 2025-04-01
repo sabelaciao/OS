@@ -77,6 +77,8 @@ int procesar_linea(char *linea) {
     char *comandos[max_commands];
     int num_comandos = tokenizar_linea(linea, "|", comandos, max_commands);
 
+    background = 0;  // Reset background flag for each line (added by us). RESET background flag for each line
+
     //Check if background is indicated
     if (strchr(comandos[num_comandos - 1], '&')) {
         background = 1;
@@ -122,13 +124,6 @@ int procesar_linea(char *linea) {
 
     for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
 
-        // Check if the last argument is '&' (if it is, it will be a background process)
-        if (strcmp(argvv[i][num_comandos - 1], "&") == 0) { // Check if the last command is '&'
-            background = 1; // IT WILL BE A BACKGROUND PROCESS.
-            argvv[i][num_comandos - 1] = NULL;  // Remove the '&' from arguments, preventing it to be processed by the following command
-        }
-
-
         pid_t pid = fork(); // Creation of child process for each command
         if (pid == -1) {
             perror("Fork failed");
@@ -144,7 +139,9 @@ int procesar_linea(char *linea) {
                 dup2(totalPipes[i][WRITE], STDOUT_FILENO); //dup2 makes STDOUT to WRITE to totalPipes[i] (CURRENT pipe's WRITE end)
                 close(totalPipes[i][WRITE]); // Close the WRITE after writing
             }
-    
+            
+            // Handle redirections (input, output, error)
+
             // filev[0] --> stores INPUT redirection file (< filename)
             if (filev[0]) { // If there exists an INPUT redirection file...
                 int fd = open(filev[0], O_RDONLY); // OPEN THAT FILE, only for reading, because it's an input
@@ -190,7 +187,8 @@ int procesar_linea(char *linea) {
         }
 
         if (background == 0) { // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
-            waitpid(pid, NULL, 0); // The parent process waits for the child process to finish.
+            printf("Foreground (child) process started with PID: %d\n", pid);
+            waitpid(pid, NULL, 0); // The parent process waits for the child process to finish (if child is foreground)
         } else {
             printf("Background process started with PID: %d\n", pid);
         }
@@ -199,6 +197,14 @@ int procesar_linea(char *linea) {
     for (int i = 0; i < num_comandos - 1; i++) { // The PARENT process also needs to close all pipes!! The parenthe parent is the one that creates the pipes, but it will not be directly using them! 
         close(totalPipes[i][READ]);
         close(totalPipes[i][WRITE]);
+    }
+
+    // Clean up child processes (wait for any child that has finished)
+    if (background == 0) {
+        // Parent process waits for all children to terminate if no background processes
+        for (int i = 0; i < num_comandos; i++) {
+            waitpid(-1, NULL, 0);  // Wait for any child process to terminate. PID '-1' is ANY child. The parent waits for ALL childs to terminate
+        }
     }
 
     return num_comandos;
