@@ -99,6 +99,7 @@ int procesar_linea(char *linea) {
     for (int i = 0; i < num_comandos; i++) {
         int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args); // Tokenize (divide) each command and store in argvv
         procesar_redirecciones(argvv);
+
     }
 
     for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
