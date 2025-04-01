@@ -55,14 +55,17 @@ void procesar_redirecciones(char *args[]) {
             filev[0] = args[i+1];
             args[i] = NULL;
             args[i + 1] = NULL;
+            i++;
         } else if (strcmp(args[i], ">") == 0) {
             filev[1] = args[i+1];
             args[i] = NULL;
             args[i + 1] = NULL;
+            i++;
         } else if (strcmp(args[i], "!>") == 0) {
             filev[2] = args[i+1];
             args[i] = NULL; 
             args[i + 1] = NULL;
+            i++;
         }
     }
 }
