@@ -16,7 +16,7 @@ const int max_commands = 10;
 char * argvv[max_args];
 char * filev[max_redirections];
 int background = 0;
-int totalPipes[9][2]; // max 10 commands (9) y 2 porque puede ser READ o WRITE
+int totalPipes[9][2]; // max 10 commands (9 pipes) y 2 porque puede ser READ o WRITE
 
 /**
  * This function splits a char* line into different tokens based on a given character
@@ -89,9 +89,10 @@ int procesar_linea(char *linea) {
             exit(EXIT_FAILURE); // Used when a pipe creation process has failed
         }
     }
+
     //Finish processing
     for (int i = 0; i < num_comandos; i++) {
-        int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args);
+        int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args); // Tokenize (divide) each command and store in argvv
         procesar_redirecciones(argvv);
 
         /********* This piece of code prints the command, args, redirections and background. **********/
@@ -110,6 +111,64 @@ int procesar_linea(char *linea) {
         if(filev[2] != NULL)
             printf("Redir [ERR] = %s\n", filev[2]);
         /**********************************************************************************************/
+    }
+
+    for (int i = 0; i < num_comandos; i++) {
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        }
+    
+        if (pid == 0) { // Child process
+            if (i > 0) { 
+                dup2(totalPipes[i - 1][0], STDIN_FILENO);
+                close(totalPipes[i - 1][0]);
+            }
+            if (i < num_comandos - 1) { 
+                dup2(totalPipes[i][1], STDOUT_FILENO);
+                close(totalPipes[i][1]);
+            }
+    
+            if (filev[0]) {
+                int fd = open(filev[0], O_RDONLY);
+                if (fd < 0) { perror("Error opening input file"); exit(EXIT_FAILURE); }
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+            if (filev[1]) {
+                int fd = open(filev[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (fd < 0) { perror("Error opening output file"); exit(EXIT_FAILURE); }
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
+            if (filev[2]) {
+                int fd = open(filev[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (fd < 0) { perror("Error opening error file"); exit(EXIT_FAILURE); }
+                dup2(fd, STDERR_FILENO);
+                close(fd);
+            }
+
+            for (int i = 0; i < num_comandos - 1; i++) { // Close all pipes in CHILD process
+                close(totalPipes[i][0]);
+                close(totalPipes[i][1]);
+            }
+
+            execvp(argvv[i][0], argvv[i]);
+            perror("Exec failed");
+            exit(EXIT_FAILURE);
+        }
+
+        if (background == 0) {
+            waitpid(pid, NULL, 0);
+        } else {
+            printf("Background process started with PID: %d\n", pid);
+        }
+    }
+
+    for (int i = 0; i < num_comandos - 1; i++) { // Close all pipes of PARENT process
+        close(totalPipes[i][0]);
+        close(totalPipes[i][1]);
     }
 
     return num_comandos;
@@ -171,8 +230,6 @@ int main(int argc, char *argv[]) {
             i++; // points to the next available position in the buffer
         }
     }
-
-    
         
     // In case there has been an error reading
     if (nread < 0){
