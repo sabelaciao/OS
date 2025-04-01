@@ -121,6 +121,14 @@ int procesar_linea(char *linea) {
     }
 
     for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
+
+        // Check if the last argument is '&' (if it is, it will be a background process)
+        if (strcmp(argvv[i][num_comandos - 1], "&") == 0) { // Check if the last command is '&'
+            background = 1; // IT WILL BE A BACKGROUND PROCESS.
+            argvv[i][num_comandos - 1] = NULL;  // Remove the '&' from arguments, preventing it to be processed by the following command
+        }
+
+
         pid_t pid = fork(); // Creation of child process for each command
         if (pid == -1) {
             perror("Fork failed");
