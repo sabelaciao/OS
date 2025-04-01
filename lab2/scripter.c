@@ -104,11 +104,12 @@ int procesar_linea(char *linea) {
     for (int i = 0; i < num_comandos; i++) { // EACH COMMAND RUNS IN A SEPARATE CHILD PROCESS
 
         pid_t pid = fork(); // Creation of child process for each command
+        
         if (pid == -1) {
             perror("Fork failed");
             exit(EXIT_FAILURE);
         }
-    
+
         if (pid == 0) { // Child process
             if (i > 0) { // IF ITS NOT THE FIRST COMMAND, set STDIN (standard input) to read from the previous pipe
                 dup2(totalPipes[i - 1][READ], STDIN_FILENO); // dup2 makes STDIN to read from totalPipes[i-1] (previous pipe's READ end)
@@ -162,7 +163,7 @@ int procesar_linea(char *linea) {
 
             if (execvp(argvv[0], argvv) < 0) {
                 perror("Exec failed");
-                _exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
 
             //execvp(argvv[0], argvv); // argvv[i] is the command to execute (in our case, the i-th command in the PIPELINE!!). argvv is the array that contains the arguments for argvv[i].
@@ -171,10 +172,9 @@ int procesar_linea(char *linea) {
         }
 
         if (background == 0) { // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
-            printf("Foreground (child) process started with PID: %d\n", pid);
             waitpid(pid, NULL, 0); // The parent process waits for the child process to finish (if child is foreground)
         } else {
-            printf("Background process (child) started with PID: %d\n", pid);
+            printf("%d\n", pid); // Print ID of the child
         }
     }
 
@@ -184,12 +184,12 @@ int procesar_linea(char *linea) {
     }
 
     // Clean up child processes (wait for any child that has finished)
-    if (background == 0) {
-        // Parent process waits for all children to terminate if no background processes
-        for (int i = 0; i < num_comandos; i++) {
-            waitpid(-1, NULL, 0);  // Wait for any child process to terminate. PID '-1' is ANY child. The parent waits for ALL childs to terminate
-        }
-    }
+    //if (background == 0) {
+    //    // Parent process waits for all children to terminate if no background processes
+    //    for (int i = 0; i < num_comandos; i++) { // Wait for all child processes
+    //        waitpid(-1, NULL, 0);  // Wait for any child process to terminate. PID '-1' is ANY child. The parent waits for ALL childs to terminate
+    //    }
+    //}
 
     return num_comandos;
 }
@@ -197,8 +197,8 @@ int procesar_linea(char *linea) {
 int main(int argc, char *argv[]) {
 
     /* STUDENTS CODE MUST BE HERE */
-    char example_line[] = "ls -l | grep scripter | wc -l > redir_out.txt &";
-    int n_commands = procesar_linea(example_line);
+    //char example_line[] = "ls -l | grep scripter | wc -l > redir_out.txt &";
+    //int n_commands = procesar_linea(example_line);
     
     if (argc != 2) {
         perror("Error: incorrect number of arguments. Usage: ./scripter <script_file_with_commands>");
