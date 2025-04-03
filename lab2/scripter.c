@@ -75,7 +75,7 @@ void procesar_redirecciones(char *args[]) {
  * filev -- files for redirections. NULL value means no redirection. 
  * background -- 0 means foreground; 1 background.
  */
-int procesar_linea(char *linea) {
+int procesar_linea(char *linea) {   
     char *comandos[max_commands];
     int num_comandos = tokenizar_linea(linea, "|", comandos, max_commands);
 
@@ -104,6 +104,22 @@ int procesar_linea(char *linea) {
     for (int i = 0; i < num_comandos; i++) {
         int args_count = tokenizar_linea(comandos[i], " \t\n", argvv, max_args); // Tokenize (divide) each command and store in argvv
         procesar_redirecciones(argvv);
+
+        // Check if the command is "echo"
+        if (argvv[0] != NULL && strcmp(argvv[0], "echo") == 0) {
+            // Loop through all arguments after the command name
+            for (int j = 1; j < args_count; j++) {
+                if (argvv[j] != NULL) {
+                    // Remove quotes if present
+                    char *argument = argvv[j];
+                    if ((argument[0] == '"' && argument[strlen(argument) - 1] == '"') || (argument[0] == '\'' && argument[strlen(argument) - 1] == '\'')) {
+                        argument[strlen(argument) - 1] = '\0'; // Remove trailing quote
+                        argument++; // Skip leading quote
+                        argvv[j] = argument; // Update the argument in argvv
+                    }
+                }
+            }
+        }
 
         pid = fork(); // Creation of child process for each command
         
@@ -179,6 +195,7 @@ int procesar_linea(char *linea) {
             //perror("Exec failed"); // In case the execution of the command fails
             //exit(EXIT_FAILURE);
         break;
+
         default: // Parent process
             if (background == 1 && i == num_comandos - 1) { // If background has been indicated in the line, we have to wait for the child to end. 
                 printf("%d", pid); // The parent process must print via standard output the pid of the child process.
