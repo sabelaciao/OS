@@ -196,7 +196,10 @@ int procesar_linea(char *linea) {
             //exit(EXIT_FAILURE);
         break;
 
-        default: // Parent process
+        default: // Parent process (REMEMBER TO TALK ABOUT THE PIPELINE IN THE REPORT!!!!!)
+
+        // When a sequence of commands is executed in the background, the pid that is printed is
+        // that of the process executing the last command in the sequence
             if (background == 1 && i == num_comandos - 1) { // If background has been indicated in the line, we have to wait for the child to end. 
                 printf("%d", pid); // The parent process must print via standard output the pid of the child process.
             }
@@ -209,6 +212,9 @@ int procesar_linea(char *linea) {
         close(totalPipes[i][WRITE]);
     }
 
+    // After executing a command in the foreground, the interpreter cannot have zombie
+    //processes from previous commands executed in background
+    
     if (background == 0) { // 0 -> a process runs in foreground (primer plano).  1 -> a process runs in background
         for (int i = 0; i < num_comandos; i++) { // Wait for all child processes
             waitpid(pid, NULL, 0); // The parent process waits for the child process to finish (if child is foreground)
