@@ -7,14 +7,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define default_buffer_size 1024
+#define DEFAULT_BUFFER_SIZE 1024
 
 int main(int argc, char **argv) {
     // Check the number of arguments
     if (argc != 3) {
-        errno = EINVAL; // Set 'errno' variable to "Invalid argument"
         perror("Error: incorrect number of arguments. Usage: ./mygrep <file> <string>");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Open the file
@@ -25,13 +24,13 @@ int main(int argc, char **argv) {
     }
 
     // Read the file
-    char c; // pointer to get each character
-    size_t i = 0; // unsinged integer. It's better for buffer indexing since it avoids negative values
+    char c; // Pointer to get each character
+    size_t i = 0; // Unsinged integer. It's better for buffer indexing since it avoids negative values
     ssize_t nread = -1;
-    int found = 0; // flag to just to display the message if the string was found
+    int found = 0; // Flag to just to display the message if the string was found
 
     // Dynamic buffer allocation (start with size 1024, later we reallocate if necessary)
-    size_t buffer_size = default_buffer_size;
+    size_t buffer_size = DEFAULT_BUFFER_SIZE;
 
     // Allocate 1024 bytes to the pointer 'buffer'
     char *buffer = (char *)malloc(buffer_size);
@@ -56,20 +55,20 @@ int main(int argc, char **argv) {
             char *new_buffer = realloc(buffer, new_size); // We create a new_buffer JUST in case there is an
                                                           // error in realloc. If it happens, original buffer
                                                           // is NOT edited, which is more safe
-            if (!new_buffer) {
+            if (!new_buffer) { // If realloc fails, it returns NULL
                 perror("Memory reallocation failed");
                 free(buffer);
                 close(fd);
                 exit(-1);
             }
 
-            buffer = new_buffer; // now update the buffer safely
-            buffer_size = new_size; // and update the buffer size also safely
+            buffer = new_buffer; // Now update the buffer safely
+            buffer_size = new_size; // Update the buffer size also safely
         }
 
         // Read lines until a jump of line is found, which we replace by '\0'
         if (c == '\n') {
-            buffer[i] = '\0';
+            buffer[i] = '\0'; // Instead of adding a '\n', we add a '\0' to indicate the end of the line
             if (strstr(buffer, argv[2]) != NULL) { // strstr finds the first ocurrence of a substring inside a string
                 found = 1;
                 write(STDOUT_FILENO, buffer, strlen(buffer)); // Print the line
