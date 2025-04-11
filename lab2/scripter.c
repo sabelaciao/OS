@@ -136,16 +136,15 @@ int procesar_linea(char *linea) {
                     if (i == 0) { // First command
                         if (dup2(totalPipes[i][WRITE], STDOUT_FILENO) == -1) { // Redirect STDOUT to the first pipe
                             perror("Error duplicating pipe for STDOUT (first command)");
-                            close(totalPipes[i][WRITE]);
                             exit(EXIT_FAILURE);
                         }
-                        close(totalPipes[i][WRITE]); // Close the WRITE after writing
+                        close(totalPipes[i][WRITE]) == -1; // Close the WRITE end after writing
                     } else if (i == num_comandos - 1) { // Last command
                         if (dup2(totalPipes[i - 1][READ], STDIN_FILENO) == -1) { // Redirect STDIN to the last pipe
                             perror("Error duplicating pipe for STDIN (last command)");
                             exit(EXIT_FAILURE);
                         }
-                        close(totalPipes[i - 1][READ]); // Close the READ end after reading
+                        close(totalPipes[i - 1][READ]) == -1; // Close the READ end after reading
                     } else { // Middle commands
                         // IF ITS NOT THE FIRST COMMAND, set STDIN (standard input) to read from the previous pipe
                         // IF IT'S NOT THE LAST COMMAND, set STDOUT to write to the NEXT Pipe
@@ -157,11 +156,17 @@ int procesar_linea(char *linea) {
                             perror("Error duplicating pipe for STDOUT (middle command)");
                             exit(EXIT_FAILURE);
                         }
-                        close(totalPipes[i][WRITE]); // Close the WRITE after writing
-                        close(totalPipes[i - 1][READ]); // Close the READ end after reading
+                        close(totalPipes[i][WRITE]) == -1; // Close the WRITE end after writing
+                        close(totalPipes[i - 1][READ]) == -1; // Close the READ end after reading
                     }
-                }   
 
+                    // In each child process, close the pipe ends that it doesn't need
+                    for (int j = 0; j < num_comandos - 1; j++) { 
+                        close(totalPipes[j][READ]);  // Close the read end of pipes the child does not use
+                        close(totalPipes[j][WRITE]); // Close the write end of pipes the child does not use
+                    }
+                }
+                
                 // Handle redirections (input, output, error)
 
                 // filev[0] --> stores INPUT redirection file (< filename)
@@ -173,10 +178,9 @@ int procesar_linea(char *linea) {
                     }
                     if (dup2(finput, STDIN_FILENO) == -1) { // The funcion 'dup2' in this case redirects the standard input (STDIN) to come from the file 'finput' instead of keyboard
                         perror("Error duplicating input redirection");
-                        close(finput);
                         exit(EXIT_FAILURE);
                     }
-                    close(finput);
+                    close(finput); // Close the file descriptor
                 }
 
                 // filev[1] --> stores OUTPUT redirection files (> filename)
@@ -188,11 +192,10 @@ int procesar_linea(char *linea) {
                     }
                     if (dup2(foutput, STDOUT_FILENO) == -1) { // The funcion 'dup2' in this case redirects the standard output (STDOUT) to come from the file 'foutput' instead of keyboard
                         perror("Error duplicating output redirection");
-                        close(foutput);
                         exit(EXIT_FAILURE);
                     }
-                    close(foutput);
-                }
+                    close(foutput); // Close the file descriptor
+                }   
 
                 // filev[2] --> stores ERROR redirection files (!> filename)
                 if (filev[2]) { // If there exists an ERROR redirection file...
@@ -203,23 +206,17 @@ int procesar_linea(char *linea) {
                     }
                     if (dup2(ferror, STDERR_FILENO) == -1) { // The funcion 'dup2' in this case redirects the standard error (STDERR) to come from a file 'ferror' instead of keyboard
                         perror("Error duplicating error redirection");
-                        close(ferror);
                         exit(EXIT_FAILURE);
                     }
-                    close(ferror);
-                }
-
-                // In each child process, close the pipe ends that it doesn't need
-                for (int j = 0; j < num_comandos - 1; j++) { 
-                    close(totalPipes[j][READ]);  // Close the read end of pipes the child does not use
-                    close(totalPipes[j][WRITE]); // Close the write end of pipes the child does not use
-                    
+                    close(ferror); // Close the file descriptor
                 }
             
                 // In argvv[0] we have the command to execute. argvv is the array that contains the arguments for argvv[i].
-                execvp(argvv[0], argvv);
-                perror("Exec failed");
-                exit(EXIT_FAILURE);
+                if (execvp(argvv[0], argvv) == -1) { // Execute the command
+                    perror("Exec failed");
+                    exit(EXIT_FAILURE);
+                }
+                
                 break;
 
             default: // Parent process
