@@ -78,14 +78,42 @@ int queue_put(struct element* x) {
 		perror("Failed to unlock the mutex");
 		return -1; // Failed to unlock the mutex
 	}
-	
+
 	return 0;
 }
 
 
 // To Dequeue an element.
 struct element* queue_get(void) {
-	return NULL;
+	if (pthread_mutex_lock(&mutex) != 0) { // Lock the mutex to ensure exclusive access to the queue
+		perror("Failed to lock the mutex");
+		return NULL; // Failed to lock the mutex
+	}
+
+	while (count == 0) { // Wait until the queue is not empty
+		if (pthread_cond_wait(&not_empty, &mutex) != 0) { // The consumer thread waits until the queue is not empty (not_empty is signaled)
+			perror("Failed to wait on the 'not_empty' condition variable");
+			pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
+			return NULL; // Failed to wait on the condition variable
+		}
+	}
+
+	struct element *item = queue[front]; // Get the element from the front (beginning) of the queue
+	front = (front + 1) % capacity; // Update the front index in a circular manner
+	count--; // Decrement the count of elements in the queue
+
+	if (pthread_cond_signal(&not_full) != 0) { // Notify the condition variable that the queue is not full
+		perror("Failed to signal the 'not_full' condition variable");
+		pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
+		return NULL; // Failed to signal the condition variable
+	}
+	
+	if (pthread_mutex_unlock(&mutex) != 0) { // Unlock the mutex
+		perror("Failed to unlock the mutex");
+		return NULL; // Failed to unlock the mutex
+	}
+
+	return item;
 }
 
 
