@@ -13,6 +13,7 @@
 #include <semaphore.h>
 #include "queue.h"
 #include "process_manager.h"
+#include "factory_manager.h"
 
 #define NUM_THREADS 2
 

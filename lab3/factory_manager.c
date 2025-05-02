@@ -13,6 +13,7 @@
 #include <semaphore.h>
 #include <sys/stat.h>
 #include "process_manager.h"
+#include "factory_manager.h"
 
 // Structure to hold process_manager parameters
 typedef struct {
