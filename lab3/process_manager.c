@@ -59,7 +59,7 @@ void *process_manager(void *arg) {
 
 	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
-		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		printf("[ERROR][queue] There was an error while using queue with id: %d", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
 	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.", id_belt, belt_size);
@@ -74,13 +74,33 @@ void *process_manager(void *arg) {
 	process_data->items_to_produce = items_to_produce;
 
 	if (pthread_create(&producer_thread, NULL, producer, (void *)process_data) != 0 || pthread_create(&consumer_thread, NULL, consumer, (void *)process_data) != 0) {
-        printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", process_data->id_belt);
+        printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
         queue_destroy();
         free(process_data);
         pthread_exit((void *)-1);
     }
 	
+	// Wait for the producer and consumer threads to finish
+	if (pthread_join(producer_thread, NULL) != 0 || pthread_join(consumer_thread, NULL) != 0) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		queue_destroy();
+		free(process_data);
+		pthread_exit((void *)-1);
+	}
 
+	printf("[OK][process_manager] Process_manager with id <id> has produced <number of elements> elements.\n", id_belt, items_to_produce);
+
+
+	// Remove the queue
+	if (queue_destroy() != 0) {
+		printf("[ERROR][queue] There was an error while using queue with id: %d", id_belt);
+		pthread_exit((void *)-1);
+	}
+
+	// Free the allocated memory for thread data
+	free(process_data); 
+
+	pthread_exit(NULL); // Exit the thread
 }
 
 
