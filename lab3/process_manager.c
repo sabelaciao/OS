@@ -103,6 +103,13 @@ void *process_manager(void *arg) {
 	pthread_exit(NULL); // Exit the thread
 }
 
+void *producer(void *arg){
+
+}
+
+void *consumer(void *arg){
+	
+}
 
 int process_manager2 (int id, int belt_size, int items_to_produce ){
 	pthread_t threads[NUM_THREADS];
