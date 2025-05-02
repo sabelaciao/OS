@@ -17,6 +17,12 @@
 
 #define NUM_THREADS 2
 
+// Structure to hold process_manager parameters
+typedef struct {
+    int id_belt;
+    int items_to_produce;
+} thread_data_t;
+
 
 //Thread function
 void *PrintHello(void *threadid)
@@ -45,17 +51,36 @@ void *process_manager(void *arg) {
 
 	// Wait until the semaphore is signaled
 	extern sem_t *sem_processes;
-	sem_wait(&sem_processes[id_belt]);
+	if (sem_wait(&sem_processes[id_belt]) == -1) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		pthread_exit((void *)-1); // Exit with error
+	}
 
 
-	// Create the queue (belt)
+	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
 	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.", id_belt, belt_size);
 
+
+	// Create the producer and consumer threads
+	pthread_t producer_thread;
+	pthread_t consumer_thread;
+
+	thread_data_t *process_data = malloc(sizeof(thread_data_t)); // Allocate memory for the thread data
+	process_data->id_belt = id_belt;
+	process_data->items_to_produce = items_to_produce;
+
+	if (pthread_create(&producer_thread, NULL, producer, (void *)process_data) != 0 || pthread_create(&consumer_thread, NULL, consumer, (void *)process_data) != 0) {
+        printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", process_data->id_belt);
+        queue_destroy();
+        free(process_data);
+        pthread_exit((void *)-1);
+    }
 	
+
 }
 
 
