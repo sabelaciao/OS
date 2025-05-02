@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/stat.h>
+#include "process_manager.h"
 
 // Structure to hold process_manager parameters
 typedef struct {
@@ -161,8 +162,8 @@ int main (int argc, const char * argv[] ){
 	}
 
 	// Initialize the semaphores
-	for (int i = 0; i < max_processes; i++) {
-		if (sem_init(&sem_processes[i], 0, 0) != 0) {
+	for (int i = 0; i < process_count; i++) {
+		if (sem_init(&sem_processes[i], 0, 0) != 0) { // Initially blocked
 			perror("[ERROR][factory_manager] Process_manager with id 0\n");
 			free(threads);
 			free(processes);
@@ -170,6 +171,31 @@ int main (int argc, const char * argv[] ){
 			close(fd);
 			return -1;
 		}
+	}
+
+	// Create the threads
+	for (int i = 0; i < process_count; i++) {
+		int return_value = pthread_create(&threads[i], NULL, process_manager, &processes[i]);
+		if (return_value != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
+
+		// Signal the semaphore to start the process_manager
+		if (sem_post(&sem_processes[i]) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
+
+		printf("[OK][factory_manager] Process_manager with id %d has been created.\n", processes[i].id_belt);
 	}
 
 
