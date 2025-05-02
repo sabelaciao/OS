@@ -232,7 +232,6 @@ int main (int argc, const char * argv[] ){
 
 
 	// Remove the semaphores
-
 	for (int i = 0; i < process_count; i++) {
 		if (sem_destroy(&sem_processes[i]) != 0) {
 			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
