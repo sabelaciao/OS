@@ -17,6 +17,7 @@
 
 // Structure to hold process_manager parameters
 
+sem_t *sem_processes; // Global variable to hold the semaphores
 
 int main (int argc, const char * argv[] ){
 
@@ -155,7 +156,7 @@ int main (int argc, const char * argv[] ){
 		return -1;
 	}
 
-    sem_t *sem_processes = malloc(max_processes * sizeof(sem_t));
+    sem_processes = malloc(max_processes * sizeof(sem_t));
 	if (sem_processes == NULL) {
 		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(threads);
