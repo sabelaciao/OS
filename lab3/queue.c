@@ -42,14 +42,44 @@ int queue_init(int size){
 		return -1;
 	}
 
-	return 0; // Success
+	return 0;
 }
 
 
 // To Enqueue an element
 int queue_put(struct element* x) {
+	// Lock the mutex to ensure exclusive access to the queue
+	if (pthread_mutex_lock(&mutex) != 0){
+		perror("Failed to lock the mutex");
+		return -1; // Failed to lock the mutex
+	}
 
-	return 0; // Success
+	// Wait until the queue is not full
+	while (count == capacity) {
+		if (pthread_cond_wait(&not_full, &mutex) != 0) { // The producer thread waits until the queue is not full (not_full is signaled)
+			perror("Failed to wait on the 'not_full' condition variable");
+			pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
+			return -1; // Failed to wait on the condition variable
+		}
+	}
+
+	// Add the new element to the queue
+	queue[rear] = x; // Add the element to the rear (end) of the queue
+	rear = (rear + 1) % capacity; // Update the rear index in a circular manner
+	count++; // Increment the count of elements in the queue
+
+	if (pthread_cond_signal(&not_empty) != 0) { // Notify the condition variable that the queue is not empty
+		perror("Failed to signal the 'not_empty' condition variable");
+		pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
+		return -1; // Failed to signal the condition variable
+	}
+
+	if (pthread_mutex_unlock(&mutex) != 0) { // Unlock the mutex
+		perror("Failed to unlock the mutex");
+		return -1; // Failed to unlock the mutex
+	}
+	
+	return 0;
 }
 
 
