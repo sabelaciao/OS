@@ -96,7 +96,6 @@ int main (int argc, const char * argv[] ){
 	if (sscanf(line, "%d", &max_processes) != 1 || max_processes <= 0) {
         printf("[ERROR][factory_manager] Invalid file.\n");
         free(line);
-        close(fd);
         return -1;
     }
 
@@ -105,7 +104,6 @@ int main (int argc, const char * argv[] ){
     if (processes == NULL) {
         perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
         free(line);
-        close(fd);
         return -1;
     }
 
@@ -119,7 +117,6 @@ int main (int argc, const char * argv[] ){
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(processes);
 			free(line);
-			close(fd);
 			return -1;
 		}
 
@@ -128,7 +125,6 @@ int main (int argc, const char * argv[] ){
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(processes);
 			free(line);
-			close(fd);
 			return -1;
 		}
 
@@ -141,7 +137,6 @@ int main (int argc, const char * argv[] ){
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(processes);
 		free(line);
-		close(fd);
 		return -1;
 	}
 
@@ -152,7 +147,6 @@ int main (int argc, const char * argv[] ){
 	if (threads == NULL) {
 		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(processes);
-		close(fd);
 		return -1;
 	}
 
@@ -161,18 +155,16 @@ int main (int argc, const char * argv[] ){
 		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(threads);
 		free(processes);
-		close(fd);
 		return -1;
 	}
 
 	// Initialize the semaphores
 	for (int i = 0; i < process_count; i++) {
-		if (sem_init(&sem_processes[i], 0, 0) != 0) { // Initially blocked
+		if (sem_init(&sem_processes[processes[i].id_belt], 0, 0) != 0) { // Initially blocked
 			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 			free(threads);
 			free(processes);
 			free(sem_processes);
-			close(fd);
 			return -1;
 		}
 	}
@@ -185,7 +177,6 @@ int main (int argc, const char * argv[] ){
 			free(threads);
 			free(processes);
 			free(sem_processes);
-			close(fd);
 			return -1;
 		}
 
@@ -195,7 +186,6 @@ int main (int argc, const char * argv[] ){
 			free(threads);
 			free(processes);
 			free(sem_processes);
-			close(fd);
 			return -1;
 		}
 
@@ -210,7 +200,6 @@ int main (int argc, const char * argv[] ){
 			free(threads);
 			free(processes);
 			free(sem_processes);
-			close(fd);
 			return -1;
 		}
 
@@ -225,7 +214,6 @@ int main (int argc, const char * argv[] ){
 			free(threads);
 			free(processes);
 			free(sem_processes);
-			close(fd);
 			return -1;
 		}
 	}
