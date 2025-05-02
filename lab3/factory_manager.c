@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <pthread.h>
 #include <semaphore.h>
 #include <sys/stat.h>
 
