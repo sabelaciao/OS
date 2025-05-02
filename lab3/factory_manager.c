@@ -175,8 +175,8 @@ int main (int argc, const char * argv[] ){
 
 	// Create the threads
 	for (int i = 0; i < process_count; i++) {
-		int return_value = pthread_create(&threads[i], NULL, process_manager, &processes[i]);
-		if (return_value != 0) {
+		// Create the process_manager thread
+		if (pthread_create(&threads[i], NULL, process_manager, &processes[i]) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
 			free(threads);
 			free(processes);
@@ -185,7 +185,7 @@ int main (int argc, const char * argv[] ){
 			return -1;
 		}
 
-		// Signal the semaphore to start the process_manager
+		// Signal (alert) the semaphore to start the process_manager 
 		if (sem_post(&sem_processes[i]) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
 			free(threads);
@@ -196,6 +196,31 @@ int main (int argc, const char * argv[] ){
 		}
 
 		printf("[OK][factory_manager] Process_manager with id %d has been created.\n", processes[i].id_belt);
+	}
+
+	// Wait for all threads to finish
+	for (int i = 0; i < process_count; i++) {
+		// Wait the signal from the semaphore to execute the actual process_manager
+		if (sem_wait(&sem_processes[i]) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
+
+		// Wait for the thread to finish
+		if (pthread_join(threads[i], NULL) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
+		
+		printf("[OK][factory_manager] Process_manager with id %d has finished.\n", processes[i].id_belt);
 	}
 
 
