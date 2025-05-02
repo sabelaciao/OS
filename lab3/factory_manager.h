@@ -3,6 +3,7 @@
 
 #include <semaphore.h>
 
+// Structure to hold process_manager parameters
 typedef struct {
     int id_belt;         
     int belt_size;        
