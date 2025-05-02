@@ -15,15 +15,6 @@
 #include "process_manager.h"
 #include "factory_manager.h"
 
-#define NUM_THREADS 2
-
-// Structure to hold process_manager parameters
-typedef struct {
-    int id_belt;
-    int items_to_produce;
-} thread_data_t;
-
-
 void *process_manager(void *arg) {
 	process_data_t *element = (process_data_t *)arg;
 
@@ -34,7 +25,7 @@ void *process_manager(void *arg) {
 
 	int id_belt = element->id_belt;
     int belt_size = element->belt_size;
-    int items_to_produce = element->items_to_produce;
+    int items_to_produce = element->elements_to_generate;
 
 	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, items_to_produce);
 
