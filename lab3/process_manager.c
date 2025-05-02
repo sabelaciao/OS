@@ -43,6 +43,19 @@ void *process_manager(void *arg) {
 
 	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, items_to_produce);
 
+	// Wait until the semaphore is signaled
+	extern sem_t *sem_processes;
+	sem_wait(&sem_processes[id_belt]);
+
+
+	// Create the queue (belt)
+	if (queue_init(belt_size) != 0) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		pthread_exit((void *)-1); // Exit with error
+	}
+	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.", id_belt, belt_size);
+
+	
 }
 
 
