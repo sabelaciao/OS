@@ -1,2 +1,3 @@
-NIA,Apellidos,Nombre <- Reemplazame (eliminame)
-NIA,Surname,First name <-Replace Me (delete me)
+100523102,Rubert Docampo,Sabela
+100523065,Tarbay Guadalupe,Alejandro
+100523139,Hogas Goras,Roberto
