@@ -28,7 +28,6 @@ int main (int argc, const char * argv[] ){
 	int fd = open(argv[1], O_RDONLY);
 	if (fd < 0) {
 		printf("[ERROR][factory_manager] Invalid file.");
-		free(fd);
 		return -1;
 	}
 
