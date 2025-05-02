@@ -118,7 +118,7 @@ int main (int argc, const char * argv[] ){
 	while((number_of_arguments = sscanf(ptr, "%d %d %d", &processes[process_count].id_belt, &processes[process_count].belt_size, &processes[process_count].elements_to_generate)) == 3) {
 
 		// Validate the values of the process_manager
-		if (processes[process_count].id_belt < 0 || processes[process_count].belt_size <= 0 || processes[process_count].elements_to_generate < 0) {
+		if (processes[process_count].id_belt < 0 || processes[process_count].belt_size <= 0 || processes[process_count].elements_to_generate <= 0) {
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(processes);
 			free(line);
