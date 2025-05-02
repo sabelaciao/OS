@@ -59,10 +59,10 @@ void *process_manager(void *arg) {
 
 	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
-		printf("[ERROR][queue] There was an error while using queue with id: %d", id_belt);
+		printf("[ERROR][queue] There was an error while using queue with id: %d\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
-	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.", id_belt, belt_size);
+	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.\n", id_belt, belt_size);
 
 
 	// Create the producer and consumer threads
@@ -93,7 +93,7 @@ void *process_manager(void *arg) {
 
 	// Remove the queue
 	if (queue_destroy() != 0) {
-		printf("[ERROR][queue] There was an error while using queue with id: %d", id_belt);
+		printf("[ERROR][queue] There was an error while using queue with id: %d\n", id_belt);
 		pthread_exit((void *)-1);
 	}
 
@@ -105,6 +105,41 @@ void *process_manager(void *arg) {
 
 void *producer(void *arg){
 
+	// Get the thread data
+	thread_data_t *data = (thread_data_t *)arg;
+	if (data == NULL) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id.\n", data->id_belt);
+		pthread_exit((void *)-1);
+	}
+
+	int id_belt = data->id_belt;
+	int items_to_produce = data->items_to_produce;
+
+	for (int i = 0; i < items_to_produce; i++) {
+		// Allocate memory for the element
+		struct element *e = malloc(sizeof(struct element)); 
+		e->num_edition = i;
+		e->id_belt = id_belt;
+		if (i == items_to_produce - 1) {
+			e->last = 1; // Mark the last item
+		} else {
+			e->last = 0; // Not the last item
+		}
+
+		// Wait if queue is full
+		while (queue_full()) {
+			usleep(100); // Sleep for a while to avoid busy waiting
+		}
+
+		if (queue_put(e) != 0) {
+			printf("“[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
+			free(e);
+			pthread_exit((void *)-1);
+		}
+		printf("[OK][queue] Introduced element with id %d in belt %d.\n", e->num_edition, e->id_belt);
+	}
+
+	pthread_exit(NULL);
 }
 
 void *consumer(void *arg){
