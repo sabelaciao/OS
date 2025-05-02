@@ -23,13 +23,13 @@ typedef struct {
 int main (int argc, const char * argv[] ){
 
 	if (argc != 2) {
-		perror("Usage: ./factory_manager <text_file>");
+		printf("Usage: ./factory_manager <text_file>");
 		return -1;
 	}
 
 	int fd = open(argv[1], O_RDONLY);
 	if (fd < 0) {
-		perror("[ERROR][factory_manager] Invalid file.");
+		printf("[ERROR][factory_manager] Invalid file.");
 		free(fd);
 		return -1;
 	}
@@ -38,7 +38,7 @@ int main (int argc, const char * argv[] ){
 	char *line = malloc(buffer_size); // Allocate memory for the line
 
 	if (line == NULL) {
-		perror("[ERROR][factory_manager] Process_manager with id 0");
+		printf("[ERROR][factory_manager] Process_manager with id 0\n");
 		close(fd);
 		return -1;
 	}
@@ -54,7 +54,7 @@ int main (int argc, const char * argv[] ){
             buffer_size *= 2;  // We double the buffer size
             line = realloc(line, buffer_size);
             if (line == NULL) {
-                perror("[ERROR][factory_manager] Process_manager with id 0");
+                printf("[ERROR][factory_manager] Process_manager with id 0\n");
                 close(fd);
                 return -1;
             }
@@ -71,11 +71,29 @@ int main (int argc, const char * argv[] ){
 	}
 
 	if (bytesRead < 0) {
-		perror("[ERROR][factory_manager] Invalid file.");
+		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(line);
 		close(fd);
 		return -1;
 	}
+
+	// Ensure the line is null-terminated
+	if (bytesRead == 0 || line_pos == 0 || line[line_pos - 1] != '\0') {
+		line[line_pos] = '\0';
+	}
+
+	// Process the line
+	int max_processes = 0;
+	int process_count = 0;
+
+	// Get the max number of processes. If the line is empty or the number of processes is not bigger than 0, return an error
+	if (sscanf(line, "%d", &max_processes) != 1 || max_processes <= 0) {
+        printf("[ERROR][factory_manager] Invalid file.\n");
+        free(line);
+        close(fd);
+        return -1;
+    }
+	
 
 	int* status;
 
