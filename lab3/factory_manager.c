@@ -17,7 +17,7 @@
 typedef struct {
     int id_belt;
     int belt_size;
-    int items_to_produce;
+    int elements_to_generate;
 } process_data_t;
 
 int main (int argc, const char * argv[] ){
@@ -85,6 +85,7 @@ int main (int argc, const char * argv[] ){
 	// Process the line
 	int max_processes = 0;
 	int process_count = 0;
+	process_data_t *processes = NULL;  // Pointer to store processes
 
 	// Get the max number of processes. If the line is empty or the number of processes is not bigger than 0, return an error
 	if (sscanf(line, "%d", &max_processes) != 1 || max_processes <= 0) {
@@ -93,7 +94,56 @@ int main (int argc, const char * argv[] ){
         close(fd);
         return -1;
     }
-	
+
+	// Dynamically allocate memory for processes based on max_processes
+    processes = malloc(max_processes * sizeof(process_data_t));
+    if (processes == NULL) {
+        perror("[ERROR][factory_manager] Process_manager with id 0\n");
+        free(line);
+        close(fd);
+        return -1;
+    }
+
+	// Read belt_id, belt_size_ and number of items 3 by 3
+	int number_of_arguments;
+	char *ptr = line;
+	while((number_of_arguments = sscanf(ptr, "%d %d %d", &processes[process_count].id_belt, &processes[process_count].belt_size, &processes[process_count].elements_to_generate)) == 3) {
+
+		// Validate the values of the process_manager
+		if (processes[process_count].id_belt < 0 || processes[process_count].belt_size <= 0 || processes[process_count].elements_to_generate < 0) {
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(processes);
+			free(line);
+			close(fd);
+			return -1;
+		}
+
+		process_count++;
+		if (process_count > max_processes) { // Error if we reach the maximum number of processes
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(processes);
+			free(line);
+			close(fd);
+			return -1;
+		}
+
+		while (*ptr == ' '){ // Skip any spaces
+			ptr++;
+		} 
+	}
+
+	if (number_of_arguments != 0) { // Error if when finished reading the file, we have not read 3 by 3 arguments
+		printf("[ERROR][factory_manager] Invalid file.\n");
+		free(processes);
+		free(line);
+		close(fd);
+		return -1;
+	}
+
+	free(line); // Free the line buffer
+
+
+
 
 	int* status;
 
@@ -103,5 +153,6 @@ int main (int argc, const char * argv[] ){
 		return -1;
 	}
 
+	printf("[OK][factory_manager] Finishing.\n");
 	return 0;
 }
