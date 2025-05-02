@@ -16,11 +16,7 @@
 #include "factory_manager.h"
 
 // Structure to hold process_manager parameters
-typedef struct {
-    int id_belt;
-    int belt_size;
-    int elements_to_generate;
-} process_data_t;
+
 
 int main (int argc, const char * argv[] ){
 
