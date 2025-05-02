@@ -10,8 +10,8 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <pthread.h>
-#include "queue.h"
 #include <semaphore.h>
+#include "queue.h"
 #include "process_manager.h"
 
 #define NUM_THREADS 2
@@ -29,6 +29,18 @@ void *PrintHello(void *threadid)
 
 
 void *process_manager(void *arg) {
+	process_data_t *element = (process_data_t *)arg;
+
+	if (element == NULL) {
+		printf("[ERROR][process_manager] Process_manager with id %d has finished with errors.\n", element->id_belt);
+		pthread_exit(NULL);
+	}
+
+	int id_belt = element->id_belt;
+    int belt_size = element->belt_size;
+    int items_to_produce = element->items_to_produce;
+
+	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, items_to_produce);
 
 }
 
