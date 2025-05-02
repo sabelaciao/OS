@@ -15,6 +15,79 @@
 #include "process_manager.h"
 #include "factory_manager.h"
 
+void *producer(void *arg){
+
+	// Get the thread data
+	thread_data_t *data = (thread_data_t *)arg;
+	if (data == NULL) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", data->id_belt);
+		pthread_exit((void *)-1);
+	}
+
+	int id_belt = data->id_belt;
+	int items_to_produce = data->items_to_produce;
+
+	for (int i = 0; i < items_to_produce; i++) {
+		// Allocate memory for the element
+		struct element *e = malloc(sizeof(struct element)); 
+		e->num_edition = i;
+		e->id_belt = id_belt;
+		if (i == items_to_produce - 1) {
+			e->last = 1; // Mark the last item
+		} else {
+			e->last = 0; // Not the last item
+		}
+
+		// Wait if queue is full
+		while (queue_full()) {
+			usleep(100); // Sleep for a while to avoid busy waiting
+		}
+
+		if (queue_put(e) != 0) {
+			printf("“[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
+			free(e);
+			pthread_exit((void *)-1);
+		}
+		printf("[OK][queue] Introduced element with id %d in belt %d.\n", e->num_edition, e->id_belt);
+	}
+
+	pthread_exit(NULL);
+}
+
+void *consumer(void *arg){
+	// Get the thread data
+	thread_data_t *data = (thread_data_t *)arg;
+	if (data == NULL) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", data->id_belt);
+		pthread_exit((void *)-1);
+	}
+
+	int finished = 0;
+
+	while (!finished) {
+		while (queue_empty()) {
+			usleep(100); // Sleep for a while to avoid busy waiting
+		}
+
+		// Dequeue an element
+		struct element *e = queue_get();
+
+		if (e == NULL) {
+			printf("[ERROR][queue] There was an error while using queue with id: %d.\n", data->id_belt);
+			pthread_exit((void *)-1);
+		}
+
+		printf("[OK][queue] Obtained element with id %d in belt %d.\n", e->num_edition, e->id_belt);
+		if (e->last == 1) {
+			finished = 1; // Mark as finished if it's the last item
+		}
+		free(e); // Free the allocated memory for the element
+	}
+
+	pthread_exit(NULL);
+}
+
+
 void *process_manager(void *arg) {
 	process_data_t *element = (process_data_t *)arg;
 
@@ -68,7 +141,7 @@ void *process_manager(void *arg) {
 		pthread_exit((void *)-1);
 	}
 
-	printf("[OK][process_manager] Process_manager with id <id> has produced <number of elements> elements.\n", id_belt, items_to_produce);
+	printf("[OK][process_manager] Process_manager with id %d has produced %d elements.\n", id_belt, items_to_produce);
 
 
 	// Remove the queue
@@ -81,76 +154,4 @@ void *process_manager(void *arg) {
 	free(process_data); 
 
 	pthread_exit(NULL); // Exit the thread
-}
-
-void *producer(void *arg){
-
-	// Get the thread data
-	thread_data_t *data = (thread_data_t *)arg;
-	if (data == NULL) {
-		printf("[ERROR][process_manager] There was an error executing process_manager with id.\n", data->id_belt);
-		pthread_exit((void *)-1);
-	}
-
-	int id_belt = data->id_belt;
-	int items_to_produce = data->items_to_produce;
-
-	for (int i = 0; i < items_to_produce; i++) {
-		// Allocate memory for the element
-		struct element *e = malloc(sizeof(struct element)); 
-		e->num_edition = i;
-		e->id_belt = id_belt;
-		if (i == items_to_produce - 1) {
-			e->last = 1; // Mark the last item
-		} else {
-			e->last = 0; // Not the last item
-		}
-
-		// Wait if queue is full
-		while (queue_full()) {
-			usleep(100); // Sleep for a while to avoid busy waiting
-		}
-
-		if (queue_put(e) != 0) {
-			printf("“[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
-			free(e);
-			pthread_exit((void *)-1);
-		}
-		printf("[OK][queue] Introduced element with id %d in belt %d.\n", e->num_edition, e->id_belt);
-	}
-
-	pthread_exit(NULL);
-}
-
-void *consumer(void *arg){
-	// Get the thread data
-	thread_data_t *data = (thread_data_t *)arg;
-	if (data == NULL) {
-		printf("[ERROR][process_manager] There was an error executing process_manager with id.\n", data->id_belt);
-		pthread_exit((void *)-1);
-	}
-
-	int finished = 0;
-
-	while (!finished) {
-		while (queue_empty()) {
-			usleep(100); // Sleep for a while to avoid busy waiting
-		}
-
-		// Dequeue an element
-		struct element *e = queue_get();
-
-		if (e == NULL) {
-			printf("[ERROR][queue] There was an error while using queue with id: %d.\n", data->id_belt);
-			pthread_exit((void *)-1);
-		}
-
-		printf("[OK][queue] Obtained element with id %d in belt %d.\n", e->num_edition, e->id_belt);
-		if (e->last == 1) {
-			finished = 1; // Mark as finished if it's the last item
-		}
-		free(e); // Free the allocated memory for the element
-	}
-
-	pthread_exit(NULL);
 }
