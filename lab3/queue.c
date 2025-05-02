@@ -26,7 +26,7 @@ int queue_init(int size){
 	rear = 0; // Initialize rear index
 	count = 0; // Initialize count of elements
 
-	if (thread_mutex_init(&mutex, NULL)){ // Initialize the mutex
+	if (pthread_mutex_init(&mutex, NULL)){ // Initialize the mutex
 		perror("Failed to initialize the mutex");
 		return -1;
 	}
