@@ -27,13 +27,16 @@ int queue_init(int size){
 	count = 0; // Initialize count of elements
 
 	if (thread_mutex_init(&mutex, NULL)){ // Initialize the mutex
+		perror("Failed to initialize the mutex");
 		return -1;
 	}
 	if (pthread_cond_init(&not_empty, NULL)){ // Initialize the condition variable for not_empty
+		perror("Failed to initialize the 'not_empty' condition variable");
 		pthread_mutex_destroy(&mutex); // Destroy the mutex if condition variable initialization fails
 		return -1;
 	}
 	if (pthread_cond_init(&not_full, NULL)){ // Initialize the condition variable for not_full
+		perror("Failed to initialize the 'not_full' condition variable");
 		pthread_cond_destroy(&not_empty); // Destroy the not_empty condition variable
 		pthread_mutex_destroy(&mutex); // Destroy the mutex
 		return -1;
@@ -77,15 +80,23 @@ int queue_empty(void){
 int queue_full(void){
 	int is_full;
 
-	pthread_mutex_lock(&mutex); // Lock the mutex to ensure exclusive access to the queue
+	// Lock the mutex to ensure exclusive access to the queue
+	if (pthread_mutex_lock(&mutex) != 0){
+		perror("Failed to lock the mutex");
+		return -1; // Failed to lock the mutex
+	}
 
 	if (count  == capacity) {
 		is_full = 1; // Queue is full
 	} else {
 		is_full = 0; // Queue is not full
 	}	
-
-    pthread_mutex_unlock(&mutex); // Unlock the mutex
+	
+	// Unlock the mutex
+    if (pthread_mutex_unlock(&mutex) != 0){
+		perror("Failed to unlock the mutex");
+		return -1; // Failed to unlock the mutex
+	}
 
 	// Notify the condition variable that the queue is not full
 	return is_full;
@@ -93,5 +104,30 @@ int queue_full(void){
 
 //To destroy the queue and free the resources
 int queue_destroy(void){
+	free(queue); // Free the allocated memory for the queue
+
+	// Reset the queue variables
+    queue = NULL;
+    capacity = 0;
+    front = 0;
+	rear = 0;
+	count = 0;
+
+	// Destroy the mutex and the condition variables
+	if (pthread_mutex_destroy(&mutex) != 0) {
+		perror("Failed to destroy the mutex");
+		return -1; // Failed to destroy the mutex
+	}
+
+	if (pthread_cond_destroy(&not_empty) != 0) {
+		perror("Failed to destroy the 'not_empty' condition variable");
+		return -1; // Failed to destroy the not_empty condition variable
+	}
+
+	if (pthread_cond_destroy(&not_full) != 0) {
+		perror("Failed to destroy the 'not_full' condition variable");
+		return -1; // Failed to destroy the not_full condition variable
+	}
+
 	return 0;
 }
