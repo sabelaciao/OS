@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include "queue.h"
 #include <semaphore.h>
+#include "process_manager.h"
 
 #define NUM_THREADS 2
 
@@ -28,8 +29,10 @@ void *PrintHello(void *threadid)
 
 
 void *process_manager(void *arg) {
-	
+
 }
+
+
 int process_manager2 (int id, int belt_size, int items_to_produce ){
 	pthread_t threads[NUM_THREADS];
    	int rc;
