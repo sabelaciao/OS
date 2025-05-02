@@ -39,7 +39,7 @@ int main (int argc, const char * argv[] ){
 	char *line = malloc(buffer_size); // Allocate memory for the line
 
 	if (line == NULL) {
-		printf("[ERROR][factory_manager] Process_manager with id 0\n");
+		printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		close(fd);
 		return -1;
 	}
@@ -55,7 +55,7 @@ int main (int argc, const char * argv[] ){
             buffer_size *= 2;  // We double the buffer size
             line = realloc(line, buffer_size);
             if (line == NULL) {
-                printf("[ERROR][factory_manager] Process_manager with id 0\n");
+                printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
                 close(fd);
                 return -1;
             }
@@ -70,11 +70,18 @@ int main (int argc, const char * argv[] ){
 			break;
 		}
 	}
+	
 
 	if (bytesRead < 0) {
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(line);
 		close(fd);
+		return -1;
+	}
+
+	// Close the file descriptor
+	if (close(fd) < 0) {	
+		perror("[ERROR][factory_manager] Invalid file.");
 		return -1;
 	}
 
@@ -99,7 +106,7 @@ int main (int argc, const char * argv[] ){
 	// Dynamically allocate memory for processes based on max_processes
     processes = malloc(max_processes * sizeof(process_data_t));
     if (processes == NULL) {
-        perror("[ERROR][factory_manager] Process_manager with id 0\n");
+        perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
         free(line);
         close(fd);
         return -1;
@@ -146,7 +153,7 @@ int main (int argc, const char * argv[] ){
 	// Dynamically allocate the threads and semaphores arrays
     pthread_t *threads = malloc(max_processes * sizeof(pthread_t));
 	if (threads == NULL) {
-		perror("[ERROR][factory_manager] Process_manager with id 0\n");
+		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(processes);
 		close(fd);
 		return -1;
@@ -154,7 +161,7 @@ int main (int argc, const char * argv[] ){
 
     sem_t *sem_processes = malloc(max_processes * sizeof(sem_t));
 	if (sem_processes == NULL) {
-		perror("[ERROR][factory_manager] Process_manager with id 0\n");
+		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(threads);
 		free(processes);
 		close(fd);
@@ -164,7 +171,7 @@ int main (int argc, const char * argv[] ){
 	// Initialize the semaphores
 	for (int i = 0; i < process_count; i++) {
 		if (sem_init(&sem_processes[i], 0, 0) != 0) { // Initially blocked
-			perror("[ERROR][factory_manager] Process_manager with id 0\n");
+			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 			free(threads);
 			free(processes);
 			free(sem_processes);
@@ -219,18 +226,28 @@ int main (int argc, const char * argv[] ){
 			close(fd);
 			return -1;
 		}
-		
+
 		printf("[OK][factory_manager] Process_manager with id %d has finished.\n", processes[i].id_belt);
 	}
 
 
-	int* status;
+	// Remove the semaphores
 
-
-	if (close(fd) < 0) {
-		perror("[ERROR][factory_manager] Invalid file.");
-		return -1;
+	for (int i = 0; i < process_count; i++) {
+		if (sem_destroy(&sem_processes[i]) != 0) {
+			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
 	}
+	
+	// Free the allocated memory
+	free(threads);
+	free(processes);
+	free(sem_processes);
 
 	printf("[OK][factory_manager] Finishing.\n");
 	return 0;
