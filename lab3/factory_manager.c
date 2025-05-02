@@ -121,7 +121,7 @@ int main (int argc, const char * argv[] ){
 		}
 
 		process_count++;
-		if (process_count > max_processes) { // Error if we reach the maximum number of processes
+		if (process_count >= max_processes) { // Error if we reach the maximum number of processes
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(processes);
 			free(line);

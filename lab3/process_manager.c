@@ -20,7 +20,7 @@ void *producer(void *arg){
 	// Get the thread data
 	thread_data_t *data = (thread_data_t *)arg;
 	if (data == NULL) {
-		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", data->id_belt);
+		printf("[ERROR][process_manager] Arguments not valid.\n");
 		pthread_exit((void *)-1);
 	}
 
@@ -58,7 +58,7 @@ void *consumer(void *arg){
 	// Get the thread data
 	thread_data_t *data = (thread_data_t *)arg;
 	if (data == NULL) {
-		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", data->id_belt);
+		printf("[ERROR][process_manager] Arguments not valid.\n");
 		pthread_exit((void *)-1);
 	}
 
@@ -92,8 +92,8 @@ void *process_manager(void *arg) {
 	process_data_t *element = (process_data_t *)arg;
 
 	if (element == NULL) {
-		printf("[ERROR][process_manager] Process_manager with id %d has finished with errors.\n", element->id_belt);
-		pthread_exit(NULL);
+		printf("[ERROR][process_manager] Arguments not valid.\n");
+		pthread_exit((void *)-1); // Exit with error
 	}
 
 	int id_belt = element->id_belt;
