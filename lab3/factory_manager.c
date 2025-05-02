@@ -142,7 +142,35 @@ int main (int argc, const char * argv[] ){
 
 	free(line); // Free the line buffer
 
+	// Dynamically allocate the threads and semaphores arrays
+    pthread_t *threads = malloc(max_processes * sizeof(pthread_t));
+	if (threads == NULL) {
+		perror("[ERROR][factory_manager] Process_manager with id 0\n");
+		free(processes);
+		close(fd);
+		return -1;
+	}
 
+    sem_t *sem_processes = malloc(max_processes * sizeof(sem_t));
+	if (sem_processes == NULL) {
+		perror("[ERROR][factory_manager] Process_manager with id 0\n");
+		free(threads);
+		free(processes);
+		close(fd);
+		return -1;
+	}
+
+	// Initialize the semaphores
+	for (int i = 0; i < max_processes; i++) {
+		if (sem_init(&sem_processes[i], 0, 0) != 0) {
+			perror("[ERROR][factory_manager] Process_manager with id 0\n");
+			free(threads);
+			free(processes);
+			free(sem_processes);
+			close(fd);
+			return -1;
+		}
+	}
 
 
 	int* status;
