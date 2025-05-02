@@ -183,7 +183,7 @@ int main (int argc, const char * argv[] ){
 	// Create the threads
 	for (int i = 0; i < process_count; i++) {
 		// Create the process_manager thread
-		if (pthread_create(&threads[i], NULL, process_manager, &processes[i]) != 0) {
+		if (pthread_create(&threads[i], NULL, process_manager, &processes[i]) != 0) { // process[i] is the argument for process_manager
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
 			free(threads);
 			free(processes);

@@ -27,7 +27,10 @@ void *PrintHello(void *threadid)
 }
 
 
-int process_manager (int id, int belt_size, int items_to_produce ){
+void *process_manager(void *arg) {
+	
+}
+int process_manager2 (int id, int belt_size, int items_to_produce ){
 	pthread_t threads[NUM_THREADS];
    	int rc;
    	long t;
