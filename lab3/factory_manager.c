@@ -22,13 +22,13 @@ sem_t *sem_processes; // Global variable to hold the semaphores
 int main (int argc, const char * argv[] ){
 
 	if (argc != 2) {
-		printf("Usage: ./factory_manager <text_file>");
+		printf("[ERROR][factory_manager] Invalid file.\n");
 		return -1;
 	}
 
 	int fd = open(argv[1], O_RDONLY);
 	if (fd < 0) {
-		printf("[ERROR][factory_manager] Invalid file.");
+		printf("[ERROR][factory_manager] Invalid file.\n");
 		return -1;
 	}
 
@@ -190,7 +190,7 @@ int main (int argc, const char * argv[] ){
 		}
 
 		// Signal (alert) the semaphore to start the process_manager 
-		if (sem_post(&sem_processes[i]) != 0) {
+		if (sem_post(&sem_processes[processes[i].id_belt]) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
 			free(threads);
 			free(processes);
@@ -204,16 +204,6 @@ int main (int argc, const char * argv[] ){
 
 	// Wait for all threads to finish
 	for (int i = 0; i < process_count; i++) {
-		// Wait the signal from the semaphore to execute the actual process_manager
-		if (sem_wait(&sem_processes[i]) != 0) {
-			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
-			free(threads);
-			free(processes);
-			free(sem_processes);
-			close(fd);
-			return -1;
-		}
-
 		// Wait for the thread to finish
 		if (pthread_join(threads[i], NULL) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
