@@ -75,7 +75,20 @@ int queue_empty(void){
 }
 
 int queue_full(void){
-	return 0;
+	int is_full;
+
+	pthread_mutex_lock(&mutex); // Lock the mutex to ensure exclusive access to the queue
+
+	if (count  == capacity) {
+		is_full = 1; // Queue is full
+	} else {
+		is_full = 0; // Queue is not full
+	}	
+
+    pthread_mutex_unlock(&mutex); // Unlock the mutex
+
+	// Notify the condition variable that the queue is not full
+	return is_full;
 }
 
 //To destroy the queue and free the resources
