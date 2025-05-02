@@ -14,8 +14,15 @@
 #include <sys/stat.h>
 
 int main (int argc, const char * argv[] ){
+
+	if (argc != 2) {
+		perror("Usage: ./factory_manager <text_file>");
+		return -1;
+	}
+
+
 	int* status;
-	
+
 
 	return 0;
 }
