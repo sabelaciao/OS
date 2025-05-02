@@ -38,14 +38,15 @@ int queue_init(int size){
 		pthread_mutex_destroy(&mutex); // Destroy the mutex
 		return -1;
 	}
-	
+
 	return 0; // Success
 }
 
 
 // To Enqueue an element
 int queue_put(struct element* x) {
-	return 0;
+
+	return 0; // Success
 }
 
 
@@ -57,7 +58,20 @@ struct element* queue_get(void) {
 
 //To check queue state
 int queue_empty(void){
-	return 0;
+	int is_empty;
+
+	pthread_mutex_lock(&mutex); // Lock the mutex to ensure exclusive access to the queue
+
+	if (count  == 0) {
+		is_empty = 1; // Queue is empty
+	} else {
+		is_empty = 0; // Queue is not empty
+	}	
+
+    pthread_mutex_unlock(&mutex); // Unlock the mutex
+
+	// Notify the condition variable that the queue is not empty
+	return is_empty;
 }
 
 int queue_full(void){
