@@ -110,13 +110,13 @@ void *process_manager(void *arg) {
 
 	
 	// Signal the factory semaphore to indicate that the process_manager is ready
-	if (sem_post(&factory_semaphore) == -1) {
+	if (sem_post(&factory_semaphore) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
 
 	// Wait for the factory semaphore to be signaled
-	if (sem_wait(&element->semaphore_b) == -1) {
+	if (sem_wait(&element->semaphore_b) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}

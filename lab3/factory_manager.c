@@ -15,8 +15,8 @@
 #include "process_manager.h"
 #include "factory_manager.h"
 
-// Structure to hold process_manager parameters
-sem_t factory_semaphore; // Global variable to hold the semaphores
+// Sempahore to synchronize the factory
+sem_t factory_semaphore; 
 
 
 int main (int argc, const char * argv[] ){
@@ -46,7 +46,8 @@ int main (int argc, const char * argv[] ){
 
 	// Variable to store the character read
 	char ch;
-
+	
+	// Variable to store the number of bytes read
 	ssize_t bytesRead;
 
 	while ((bytesRead = read(fd, &ch, 1)) > 0) {
@@ -205,9 +206,9 @@ int main (int argc, const char * argv[] ){
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
 			free(processes);
 			return -1;
-		} else {
-			printf("[OK][factory_manager] Process_manager with id %d has finished.\n", processes[i].id_belt);
 		}
+		
+		printf("[OK][factory_manager] Process_manager with id %d has finished.\n", processes[i].id_belt);
 	}
 
 
@@ -219,6 +220,13 @@ int main (int argc, const char * argv[] ){
 			return -1;
 		}
 	}
+
+	if (sem_destroy(&factory_semaphore) != 0) {
+		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
+		free(processes);
+		return -1;
+	}
+
 	
 	// Free the allocated memory
 	free(processes);
