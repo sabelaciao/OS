@@ -108,17 +108,28 @@ void *process_manager(void *arg) {
 
 	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, items_to_produce);
 
-
-	sem_post(&factory_semaphore); // Signal the factory semaphore to indicate that the process_manager is ready
-
-	sem_wait(&element->semaphore_b); // Wait for the factory semaphore to be signaled
 	
+	// Signal the factory semaphore to indicate that the process_manager is ready
+	if (sem_post(&factory_semaphore) == -1) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		pthread_exit((void *)-1); // Exit with error
+	}
+
+	// Wait for the factory semaphore to be signaled
+	if (sem_wait(&element->semaphore_b) == -1) {
+		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
+		pthread_exit((void *)-1); // Exit with error
+	}
+
+
 	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
 		printf("[ERROR][queue] There was an error while using queue with id: %d\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
 	printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.\n", id_belt, belt_size);
+
+
 
 	// Create the producer and consumer threads
 	pthread_t producer_thread;

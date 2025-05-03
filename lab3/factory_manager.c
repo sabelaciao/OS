@@ -18,6 +18,7 @@
 // Structure to hold process_manager parameters
 sem_t factory_semaphore; // Global variable to hold the semaphores
 
+
 int main (int argc, const char * argv[] ){
 
 	if (argc != 2) {
@@ -42,7 +43,10 @@ int main (int argc, const char * argv[] ){
 	
 	// Read the unique line from the file
 	size_t line_pos = 0;
+
+	// Variable to store the character read
 	char ch;
+
 	ssize_t bytesRead;
 
 	while ((bytesRead = read(fd, &ch, 1)) > 0) {
@@ -57,14 +61,14 @@ int main (int argc, const char * argv[] ){
             }
         }
 
-		// Save the character in the buffer
-		line[line_pos++] = ch;
-
 		// If we reach the end of the line, break
 		if (ch == '\n') {
-			line[line_pos-1] = '\0'; // Replace '\n' with '\0'
+			line[line_pos] = '\0'; // Replace '\n' with '\0'
 			break;
 		}
+
+		// Save the character in the buffer
+		line[line_pos++] = ch;
 	}
 	
 
