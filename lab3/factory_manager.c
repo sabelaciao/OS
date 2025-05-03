@@ -32,8 +32,8 @@ int main (int argc, const char * argv[] ){
 		return -1;
 	}
 
-	size_t buffer_size = 1024; // Iitial buffer size
-	char *line = malloc(buffer_size); // Allocate memory for the line
+	size_t buffer_size = 1024; // Initial buffer size
+	char *line = malloc(buffer_size); // Allocate memory for the unique line in the file
 
 	if (line == NULL) {
 		printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
@@ -50,11 +50,12 @@ int main (int argc, const char * argv[] ){
 	// Variable to store the number of bytes read
 	ssize_t bytesRead;
 
+	// Read the file character by character
 	while ((bytesRead = read(fd, &ch, 1)) > 0) {
         // Expand the buffer if it is full
         if (line_pos >= buffer_size - 1) {  
-            buffer_size *= 2;  // We double the buffer size
-            line = realloc(line, buffer_size);
+            buffer_size *= 2;  // We double the buffer size if it is full
+            line = realloc(line, buffer_size); // Reallocate memory for the line
             if (line == NULL) {
                 printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
                 close(fd);
@@ -72,7 +73,7 @@ int main (int argc, const char * argv[] ){
 		line[line_pos++] = ch;
 	}
 	
-
+	// Check for read errors
 	if (bytesRead < 0) {
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(line);
@@ -86,27 +87,23 @@ int main (int argc, const char * argv[] ){
 		return -1;
 	}
 
-	// Ensure the line is null-terminated
-	if (bytesRead == 0 || line_pos == 0 || line[line_pos - 1] != '\0') {
-		line[line_pos] = '\0';
-	}
-
 	// Process the line
-	int max_processes = 0;
-	int process_count = 0;
-	process_data_t *processes = NULL;  // Pointer to store processes
+	int max_belts = 0;
+	int belts_count = 0;
+	process_data_t *belts = NULL;  // Pointer to store belts
 
-	int bytes_consumed;
-	// Get the max number of processes. If the line is empty or the number of processes is not bigger than 0, return an error
-	if (sscanf(line, "%d%n", &max_processes, &bytes_consumed) != 1 || max_processes <= 0) {
+	// Variable to store the number of bytes consumed by sscanf
+	int bytes_consumed = 0;
+	// Get the max number of belts. If the line is empty or the number of belts is not bigger than 0, return an error
+	if (sscanf(line, "%d%n", &max_belts, &bytes_consumed) != 1 || max_belts <= 0) {
         printf("[ERROR][factory_manager] Invalid file.\n");
         free(line);
         return -1;
     }
 
-	// Dynamically allocate memory for processes based on max_processes
-    processes = malloc((max_processes+1) * sizeof(process_data_t));
-    if (processes == NULL) {
+	// Dynamically allocate memory for belts based on max_belts
+    belts = malloc((max_belts+1) * sizeof(process_data_t));
+    if (belts == NULL) {
         perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
         free(line);
         return -1;
@@ -120,27 +117,29 @@ int main (int argc, const char * argv[] ){
 		ptr++;
 	} 
 
-	while((number_of_arguments = sscanf(ptr, "%d %d %d%n", &processes[process_count].id_belt, &processes[process_count].belt_size, &processes[process_count].elements_to_generate, &bytes_consumed)) == 3) {
+	while((number_of_arguments = sscanf(ptr, "%d %d %d%n", &belts[belts_count].id_belt, &belts[belts_count].belt_size, &belts[belts_count].elements_to_generate, &bytes_consumed)) == 3) {
 
 		// Validate the values of the process_manager
-		if (processes[process_count].id_belt < 0 || processes[process_count].belt_size <= 0 || processes[process_count].elements_to_generate <= 0) {
+		if (belts[belts_count].id_belt < 0 || belts[belts_count].belt_size <= 0 || belts[belts_count].elements_to_generate <= 0) {
 			printf("[ERROR][factory_manager] Invalid file.\n");
-			free(processes);
+			free(belts);
 			free(line);
 			return -1;
 		}
 
-		if (sem_init(&processes[process_count].semaphore_b, 0, 0) != 0) { // Initialize the semaphore for the process_manager
+		if (sem_init(&belts[belts_count].semaphore_b, 0, 0) != 0) { // Initialize the semaphore for the process_manager
 			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
-			free(processes);
+			free(belts);
 			free(line);
 			return -1;
 		}
 
-		process_count++;
-		if (process_count > max_processes) { // Error if we reach the maximum number of processes
+		belts_count++;
+
+		// Error if we have more belts than the maximum number of belts
+		if (belts_count > max_belts) {
 			printf("[ERROR][factory_manager] Invalid file.\n");
-			free(processes);
+			free(belts);
 			free(line);
 			return -1;
 		}
@@ -153,7 +152,7 @@ int main (int argc, const char * argv[] ){
 
 	if (number_of_arguments > 0) { // Error if when finished reading the file, we have not read 3 by 3 arguments
 		printf("[ERROR][factory_manager] Invalid file.\n");
-		free(processes);
+		free(belts);
 		free(line);
 		return -1;
 	}
@@ -162,74 +161,74 @@ int main (int argc, const char * argv[] ){
 
 	if(sem_init(&factory_semaphore, 0, 0) != 0) { // Initialize the semaphore for the factory
 		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
-		free(processes);
+		free(belts);
 		return -1;
 	};
 
 	// Create the threads
-	for (int i = 0; i < process_count; i++) {
+	for (int i = 0; i < belts_count; i++) {
 		// Create the process_manager thread
-		if (pthread_create(&processes[i].thread_b, NULL, process_manager, &processes[i]) != 0) { // process[i] is the argument for process_manager
-			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
-			free(processes);
+		if (pthread_create(&belts[i].thread_b, NULL, process_manager, &belts[i]) != 0) { // belts[i] is the argument for process_manager
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
+			free(belts);
 			return -1;
 		}
-		printf("[OK][factory_manager] Process_manager with id %d has been created.\n", processes[i].id_belt);
+		printf("[OK][factory_manager] Process_manager with id %d has been created.\n", belts[i].id_belt);
 	}
 
-	for (int i = 0; i < process_count; i++) {
+	for (int i = 0; i < belts_count; i++) {
 		// Signal (alert) the semaphore to start the process_manager 
-		if (sem_post(&processes[i].semaphore_b) != 0) {
-			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
-			free(processes);
+		if (sem_post(&belts[i].semaphore_b) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
+			free(belts);
 			return -1;
 		}
 
 		if (sem_wait(&factory_semaphore) == -1) {
-			printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", processes[i].id_belt);
-			free(processes);
+			printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", belts[i].id_belt);
+			free(belts);
 			return -1;
 		}
 	}
 
 	// Wait for all threads to finish
-	for (int i = 0; i < process_count; i++) {
+	for (int i = 0; i < belts_count; i++) {
 		// Wait for the thread to finish
 
-		if (sem_post(&processes[i].semaphore_b) != 0) {
-			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
-			free(processes);
+		if (sem_post(&belts[i].semaphore_b) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
+			free(belts);
 			return -1;
 		}
 
-		if (pthread_join(processes[i].thread_b, NULL) != 0) {
-			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", processes[i].id_belt);
-			free(processes);
+		if (pthread_join(belts[i].thread_b, NULL) != 0) {
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
+			free(belts);
 			return -1;
 		}
 		
-		printf("[OK][factory_manager] Process_manager with id %d has finished.\n", processes[i].id_belt);
+		printf("[OK][factory_manager] Process_manager with id %d has finished.\n", belts[i].id_belt);
 	}
 
 
 	// Remove the semaphores
-	for (int i = 0; i < process_count; i++) {
-		if (sem_destroy(&processes[i].semaphore_b) != 0) {
+	for (int i = 0; i < belts_count; i++) {
+		if (sem_destroy(&belts[i].semaphore_b) != 0) {
 			perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
-			free(processes);
+			free(belts);
 			return -1;
 		}
 	}
 
 	if (sem_destroy(&factory_semaphore) != 0) {
 		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
-		free(processes);
+		free(belts);
 		return -1;
 	}
 
 	
 	// Free the allocated memory
-	free(processes);
+	free(belts);
 
 	printf("[OK][factory_manager] Finishing.\n");
 	return 0;
