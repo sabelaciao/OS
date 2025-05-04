@@ -41,7 +41,7 @@ void *producer(void *arg){
         
         // Enqueue the element
 		if (queue_put(e) != 0) {
-			printf("“[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
+			printf("[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
 			free(e);
 			pthread_exit((void *)-1);
 		}
@@ -100,7 +100,7 @@ void *process_manager(void *arg) {
 	
 	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, elements_to_generate);
 	
- 
+
 	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
 		printf("[ERROR][queue] There was an error while using queue with id: %d\n", id_belt);

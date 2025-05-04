@@ -112,8 +112,11 @@ int main (int argc, const char * argv[] ){
 	// Read belt_id, belt_size_ and number of items 3 by 3
 	int number_of_arguments;
  
-	char *ptr = line + bytes_consumed; // Pointer to the next argument
-	while (*ptr == ' '){ // Skip any spaces
+	// Pointer to the next argument
+	char *ptr = line + bytes_consumed; 
+
+	// Skip any spaces
+	while (*ptr == ' '){ 
 		ptr++;
 	} 
  
@@ -150,10 +153,11 @@ int main (int argc, const char * argv[] ){
 		return -1;
 	}
  
-	free(line); // Free the line buffer
+	// Free the line buffer
+	free(line);
 
 	if(sem_init(&factory_semaphore, 0, 1) != 0) { // Initialize the semaphore for the factory
-		perror("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
+		printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(belts);
 		return -1;
 	}
@@ -162,7 +166,7 @@ int main (int argc, const char * argv[] ){
 	// Create the threads
 	for (int i = 0; i < belts_count; i++) {
 		if (sem_init(&belts[i].semaphore_b, 0, 0) != 0) {
-			perror("sem_init failed");
+			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
 			free(belts);
 			return -1;
 		}
@@ -174,7 +178,6 @@ int main (int argc, const char * argv[] ){
 			return -1;
 		}
 
-		
 		printf("[OK][factory_manager] Process_manager with id %d has been created.\n", belts[i].id_belt);
 	}
 
