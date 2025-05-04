@@ -4,188 +4,174 @@
 #include <pthread.h>
 #include "queue.h"
 
-static struct element **queue = NULL; // Pointer to the queue
-static int capacity = 0; // Maximum size of the queue
-static int front = 0; // Index of the first element
-static int rear = 0; // Index of the last element
-static int count = 0; // Number of elements in the queue
+// To create a queue
+int queue_init(queue_t *q, int size) {
+    // Allocate memory for the queue
+    q->queue = malloc(sizeof(element_t*) * size);
+    if (q->queue == NULL) {
+        return -1; // Memory allocation failed
+    }
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex for synchronizing access to the queue (ensures only one thread can access the queue at a time)
-static pthread_cond_t not_empty = PTHREAD_COND_INITIALIZER; // Condition variable (ensures that threads wait when the queue is empty) -> Used by consumers
-static pthread_cond_t not_full = PTHREAD_COND_INITIALIZER; // Condition variable (ensures that threads wait when the queue is full) -> Used by producers
+    q->capacity = size; // Set the capacity of the queue
+    q->front = 0; // Initialize front index
+    q->rear = 0; // Initialize rear index
+    q->count = 0; // Initialize count of elements
 
-//To create a queue
-int queue_init(int size){
-	queue = malloc(sizeof(struct element*)*size); // size is the maximum size of the queue (given by the user)
-	if (queue == NULL) {
-		return -1; // Memory allocation failed
-	}
+    // Initialize mutex and condition variables
+    if (pthread_mutex_init(&q->mutex, NULL)) {
+        perror("Failed to initialize the mutex");
+        free(q->queue);
+        return -1;
+    }
+    if (pthread_cond_init(&q->not_empty, NULL)) {
+        perror("Failed to initialize the 'not_empty' condition variable");
+        pthread_mutex_destroy(&q->mutex);
+        free(q->queue);
+        return -1;
+    }
+    if (pthread_cond_init(&q->not_full, NULL)) {
+        perror("Failed to initialize the 'not_full' condition variable");
+        pthread_cond_destroy(&q->not_empty);
+        pthread_mutex_destroy(&q->mutex);
+        free(q->queue);
+        return -1;
+    }
 
-	capacity = size; // Set the capacity of the queue
-	front = 0; // Initialize front index
-	rear = 0; // Initialize rear index
-	count = 0; // Initialize count of elements
-
-	if (pthread_mutex_init(&mutex, NULL)){ // Initialize the mutex
-		perror("Failed to initialize the mutex");
-		return -1;
-	}
-	if (pthread_cond_init(&not_empty, NULL)){ // Initialize the condition variable for not_empty
-		perror("Failed to initialize the 'not_empty' condition variable");
-		pthread_mutex_destroy(&mutex); // Destroy the mutex if condition variable initialization fails
-		return -1;
-	}
-	if (pthread_cond_init(&not_full, NULL)){ // Initialize the condition variable for not_full
-		perror("Failed to initialize the 'not_full' condition variable");
-		pthread_cond_destroy(&not_empty); // Destroy the not_empty condition variable
-		pthread_mutex_destroy(&mutex); // Destroy the mutex
-		return -1;
-	}
-
-	return 0;
+    return 0;
 }
 
 
 // To Enqueue an element
-int queue_put(struct element* x) {
-	// Lock the mutex to ensure exclusive access to the queue
-	if (pthread_mutex_lock(&mutex) != 0){
-		perror("Failed to lock the mutex");
-		return -1; // Failed to lock the mutex
-	}
+int queue_put(queue_t *q, element_t *x) {
 
-	// Wait until the queue is not full
-	while (count == capacity) {
-		if (pthread_cond_wait(&not_full, &mutex) != 0) { // The producer thread waits until the queue is not full (not_full is signaled)
-			perror("Failed to wait on the 'not_full' condition variable");
-			pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
-			return -1; // Failed to wait on the condition variable
-		}
-	}
 
-	// Add the new element to the queue
-	queue[rear] = x; // Add the element to the rear (end) of the queue
-	rear = (rear + 1) % capacity; // Update the rear index in a circular manner
-	count++; // Increment the count of elements in the queue
+    // Wait until the queue is not full
+    while (queue_full(q)) {
+        if (pthread_cond_wait(&q->not_full, &q->mutex) != 0) {
+            perror("Failed to wait on the 'not_full' condition variable");
+            pthread_mutex_unlock(&q->mutex);
+            return -1;
+        }
+    }
 
-	if (pthread_cond_signal(&not_empty) != 0) { // Notify the condition variable that the queue is not empty
-		perror("Failed to signal the 'not_empty' condition variable");
-		pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
-		return -1; // Failed to signal the condition variable
-	}
+    // Add the new element to the queue
+    q->queue[q->rear] = *x; // Add the element to the rear of the queue
+    q->rear = (q->rear + 1) % q->capacity; // Update the rear index in a circular manner
+    q->count++; // Increment the count of elements in the queue
 
-	if (pthread_mutex_unlock(&mutex) != 0) { // Unlock the mutex
-		perror("Failed to unlock the mutex");
-		return -1; // Failed to unlock the mutex
-	}
+    if (pthread_cond_signal(&q->not_empty) != 0) {
+        perror("Failed to signal the 'not_empty' condition variable");
+        pthread_mutex_unlock(&q->mutex);
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 
-// To Dequeue an element.
-struct element* queue_get(void) {
-	if (pthread_mutex_lock(&mutex) != 0) { // Lock the mutex to ensure exclusive access to the queue
-		perror("Failed to lock the mutex");
-		return NULL; // Failed to lock the mutex
-	}
+// To Dequeue an element
+element_t* queue_get(queue_t *q) {
 
-	while (count == 0) { // Wait until the queue is not empty
-		if (pthread_cond_wait(&not_empty, &mutex) != 0) { // The consumer thread waits until the queue is not empty (not_empty is signaled)
-			perror("Failed to wait on the 'not_empty' condition variable");
-			pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
-			return NULL; // Failed to wait on the condition variable
-		}
-	}
+    // Wait until the queue is not empty
+    while (q->count == 0) {
+        if (pthread_cond_wait(&q->not_empty, &q->mutex) != 0) {
+            perror("Failed to wait on the 'not_empty' condition variable");
+            pthread_mutex_unlock(&q->mutex);
+            return NULL;
+        }
+    }
 
-	struct element *item = queue[front]; // Get the element from the front (beginning) of the queue
-	front = (front + 1) % capacity; // Update the front index in a circular manner
-	count--; // Decrement the count of elements in the queue
+    // Dynamically allocate memory for the item
+    element_t* item = malloc(sizeof(element_t));
+    if (item == NULL) {
+        perror("Failed to allocate memory for the item");
+        pthread_mutex_unlock(&q->mutex);
+        return NULL;
+    }
 
-	if (pthread_cond_signal(&not_full) != 0) { // Notify the condition variable that the queue is not full
-		perror("Failed to signal the 'not_full' condition variable");
-		pthread_mutex_unlock(&mutex); // Unlock the mutex before returning
-		return NULL; // Failed to signal the condition variable
-	}
-	
-	if (pthread_mutex_unlock(&mutex) != 0) { // Unlock the mutex
-		perror("Failed to unlock the mutex");
-		return NULL; // Failed to unlock the mutex
-	}
+    // Copy the data from the queue element to the allocated memory
+    *item = q->queue[q->front]; // Copy the element into the allocated memory
 
-	return item;
+    q->front = (q->front + 1) % q->capacity; // Update the front index in a circular manner
+    q->count--; // Decrement the count of elements in the queue
+
+    if (pthread_cond_signal(&q->not_full) != 0) {
+        perror("Failed to signal the 'not_full' condition variable");
+        pthread_mutex_unlock(&q->mutex);
+        free(item);  // Free allocated memory on error
+        return NULL;
+    }
+
+    return item;
 }
+
 
 
 //To check queue state
-int queue_empty(void){
-	int is_empty;
+int queue_empty(queue_t *q) {
+    int is_empty;
 
-	pthread_mutex_lock(&mutex); // Lock the mutex to ensure exclusive access to the queue
-
-	if (count  == 0) {
-		is_empty = 1; // Queue is empty
-	} else {
-		is_empty = 0; // Queue is not empty
-	}	
-
-    pthread_mutex_unlock(&mutex); // Unlock the mutex
-
-	// Notify the condition variable that the queue is not empty
-	return is_empty;
+    if (q->count == 0) {
+        is_empty = 1; // Queue is empty
+    } else {
+        is_empty = 0; // Queue is not empty
+    }
+    return is_empty;
 }
 
-int queue_full(void){
-	int is_full;
+// To check if the queue is full
+int queue_full(queue_t *q) {
+	if (!q) {
+        printf("[DEBUG][queue_full] queue pointer is NULL!\n");
+        return 1; // Avoid segfault
+    }
 
-	// Lock the mutex to ensure exclusive access to the queue
-	if (pthread_mutex_lock(&mutex) != 0){
-		perror("Failed to lock the mutex");
-		return -1; // Failed to lock the mutex
-	}
+    printf("[DEBUG][queue_full] count = %d, capacity = %d\n", q->count, q->capacity);
+    int is_full;
 
-	if (count  == capacity) {
-		is_full = 1; // Queue is full
-	} else {
-		is_full = 0; // Queue is not full
-	}	
-	
-	// Unlock the mutex
-    if (pthread_mutex_unlock(&mutex) != 0){
-		perror("Failed to unlock the mutex");
-		return -1; // Failed to unlock the mutex
-	}
-
-	// Notify the condition variable that the queue is not full
-	return is_full;
+    if (q->count == q->capacity) {
+        is_full = 1; // Queue is full
+    } else {
+        is_full = 0; // Queue is not full
+    }
+	printf("[DEBUG][queue_full] is_full = %d\n", is_full);
+    return is_full;
 }
 
 //To destroy the queue and free the resources
-int queue_destroy(void){
-	free(queue); // Free the allocated memory for the queue
+int queue_destroy(queue_t *q) {
+	printf("[DEBUG][queue_destroy] Destroying queue...\n");
+	if (pthread_mutex_lock(&q->mutex) != 0) {
+        perror("Failed to lock mutex during destruction");
+        return -1;
+    }
+    free(q->queue);
+    q->queue = NULL;
+    q->capacity = 0;
+    q->front = 0;
+    q->rear = 0;
+    q->count = 0;
+	printf("[DEBUG][queue_destroy] Queue destroyed.\n");
+	
+	if (pthread_mutex_unlock(&q->mutex) != 0) {
+        perror("Failed to unlock mutex during destruction");
+        // Continue with destruction anyway
+    }
+    // Destroy the mutex and the condition variables
+    if (pthread_mutex_destroy(&q->mutex) != 0) {
+        perror("Failed to destroy the mutex");
+        return -1;
+    }
+	printf("[DEBUG][queue_destroy] Queue destroyed2.\n");
+    if (pthread_cond_destroy(&q->not_empty) != 0) {
+        perror("Failed to destroy the 'not_empty' condition variable");
+        return -1;
+    }
+	printf("[DEBUG][queue_destroy] Queue destroyed3.\n");
+    if (pthread_cond_destroy(&q->not_full) != 0) {
+        perror("Failed to destroy the 'not_full' condition variable");
+        return -1;
+    }
 
-	// Reset the queue variables
-    queue = NULL;
-    capacity = 0;
-    front = 0;
-	rear = 0;
-	count = 0;
-
-	// Destroy the mutex and the condition variables
-	if (pthread_mutex_destroy(&mutex) != 0) {
-		perror("Failed to destroy the mutex");
-		return -1; // Failed to destroy the mutex
-	}
-
-	if (pthread_cond_destroy(&not_empty) != 0) {
-		perror("Failed to destroy the 'not_empty' condition variable");
-		return -1; // Failed to destroy the not_empty condition variable
-	}
-
-	if (pthread_cond_destroy(&not_full) != 0) {
-		perror("Failed to destroy the 'not_full' condition variable");
-		return -1; // Failed to destroy the not_full condition variable
-	}
-
-	return 0;
+    return 0;
 }

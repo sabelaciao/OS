@@ -94,6 +94,7 @@ int main (int argc, const char * argv[] ){
 
 	// Variable to store the number of bytes consumed by sscanf
 	int bytes_consumed = 0;
+
 	// Get the max number of belts. If the line is empty or the number of belts is not bigger than 0, return an error
 	if (sscanf(line, "%d%n", &max_belts, &bytes_consumed) != 1 || max_belts <= 0) {
         printf("[ERROR][factory_manager] Invalid file.\n");
@@ -190,11 +191,11 @@ int main (int argc, const char * argv[] ){
 			return -1;
 		}
 	}
-
+	
 	// Wait for all threads to finish
 	for (int i = 0; i < belts_count; i++) {
+		
 		// Wait for the thread to finish
-
 		if (sem_post(&belts[i].semaphore_b) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
 			free(belts);
