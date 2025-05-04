@@ -38,7 +38,8 @@ void *producer(void *arg){
 		} else {
 			e->last = 0; // Not the last item
 		}
- 
+        
+        // Enqueue the element
 		if (queue_put(e) != 0) {
 			printf("“[ERROR][queue] There was an error while using queue with id: %d.\n", id_belt);
 			free(e);
@@ -47,7 +48,7 @@ void *producer(void *arg){
 	}
  
 	pthread_exit(NULL);
- }
+}
  
 void *consumer(void *arg){
 	process_data_t *data = (process_data_t *)arg;
@@ -59,6 +60,7 @@ void *consumer(void *arg){
 	int consumed = 0;
 	int total_elements = data->elements_to_generate;
  
+    // Consume the elements from the queue
 	while (consumed < total_elements) {
  
 		// Dequeue an element
@@ -85,19 +87,21 @@ void *process_manager(void *arg) {
 		pthread_exit((void *)-1); // Exit with error
 	}
 	
+    // Extract the parameters from the argument
 	int id_belt = element->id_belt;
 	int belt_size = element->belt_size;
-	int items_to_produce = element->elements_to_generate;
+	int elements_to_generate = element->elements_to_generate;
 
+    // Wait for the semaphore to start the process_manager
 	if (sem_wait(&factory_semaphore) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
 	}
 	
-	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, items_to_produce);
+	printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id_belt, elements_to_generate);
 	
  
-	 // Create the queue (conveyor belt)
+	// Create the queue (conveyor belt)
 	if (queue_init(belt_size) != 0) {
 		printf("[ERROR][queue] There was an error while using queue with id: %d\n", id_belt);
 		pthread_exit((void *)-1); // Exit with error
@@ -124,7 +128,7 @@ void *process_manager(void *arg) {
 		pthread_exit((void *)-1);
 	}
  
-	printf("[OK][process_manager] Process_manager with id %d has produced %d elements.\n", id_belt, items_to_produce);
+	printf("[OK][process_manager] Process_manager with id %d has produced %d elements.\n", id_belt, elements_to_generate);
  
  
 	// Remove the queue
@@ -133,10 +137,10 @@ void *process_manager(void *arg) {
 		pthread_exit((void *)-1);
 	}
 
-
+    // Signal (alert) the semaphore to indicate that the process_manager has finished
 	if (sem_post(&factory_semaphore) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
-		pthread_exit((void *)-1); // Exit with error
+		pthread_exit((void *)-1);
 	}
  
 	pthread_exit(NULL); // Exit the thread
