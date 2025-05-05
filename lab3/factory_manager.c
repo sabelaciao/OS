@@ -65,6 +65,13 @@ int main (int argc, const char * argv[] ){
  
 		// If we reach the end of the line, break
 		if (ch == '\n') {
+			// When we read '\n', there should not be any more characters in the file, because the file would have more than one line.
+			if ((bytesRead = read(fd, &ch, 1)) > 0) {
+				printf("[ERROR][factory_manager] Invalid file.\n");
+				free(line);
+				close(fd);
+				return -1;
+			}
 			line[line_pos] = '\0'; // Replace '\n' with '\0'
 			break;
 		}
@@ -120,8 +127,65 @@ int main (int argc, const char * argv[] ){
 		ptr++;
 	} 
  
-	while((number_of_arguments = sscanf(ptr, "%d %d %d%n", &belts[belts_count].id_belt, &belts[belts_count].belt_size, &belts[belts_count].elements_to_generate, &bytes_consumed)) == 3) {
+	while((number_of_arguments = sscanf(ptr, "%d%n", &belts[belts_count].id_belt, &bytes_consumed)) == 1) {
  
+		ptr += bytes_consumed;
+
+		// Check spacing after first number (must be exactly one space)
+		if (*ptr != ' ' || (ptr[1] == ' ')) {
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(belts);
+			free(line);
+			return -1;
+		}
+
+		// Skip the single space
+		ptr++; 
+
+		// Read the second number
+		if ((number_of_arguments = sscanf(ptr, "%d%n", &belts[belts_count].belt_size, &bytes_consumed)) != 1) {
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(belts);
+			free(line);
+			return -1;
+		}
+		
+		ptr += bytes_consumed;
+		
+		// Check spacing after second number (must be exactly one space)
+		if (*ptr != ' ' || (ptr[1] == ' ')) {
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(belts);
+			free(line);
+			return -1;
+		}
+		ptr++;  // Skip the single space
+
+		// Read the third number
+		if ((number_of_arguments = sscanf(ptr, "%d%n", &belts[belts_count].elements_to_generate, &bytes_consumed)) != 1) {
+			printf("[ERROR][factory_manager] Invalid file.\n");
+			free(belts);
+			free(line);
+			return -1;
+		}
+		
+		ptr += bytes_consumed;
+
+		// After the third number, either:
+    	// 1. End of string (valid)
+    	// 2. Exactly one space (if more belts follow)
+    	if (*ptr != '\0') {
+        	if (*ptr != ' ' || (ptr[1] == ' ')) {
+            	printf("[ERROR][factory_manager] Invalid file.\n");
+            	free(belts);
+            	free(line);
+            return -1;
+        	}
+
+			// Skip the single space
+        	ptr++; 
+   	 	}
+
 		// Validate the values of the process_manager
 		if (belts[belts_count].id_belt < 0 || belts[belts_count].belt_size <= 0 || belts[belts_count].elements_to_generate <= 0) {
 			printf("[ERROR][factory_manager] Invalid file.\n");
@@ -139,14 +203,18 @@ int main (int argc, const char * argv[] ){
 			free(line);
 			return -1;
 		}
- 
-		ptr += bytes_consumed;
-		while (*ptr == ' '){ // Skip any spaces
-			ptr++;
-		} 
+	}
+
+	// Error if we have not read any belts. In the statement of the lab, it says: <Max number belts> [<belt ID> <belt size> <No.elements>]+
+	if (belts_count == 0) {
+		printf("[ERROR][factory_manager] Invalid file.\n");
+		free(belts);
+		free(line);
+		return -1;
 	}
  
-	if (number_of_arguments > 0) { // Error if when finished reading the file, we have not read 3 by 3 arguments
+	// Error if when finished reading the file, we have not read 3 by 3 arguments
+	if (number_of_arguments > 0) { 
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(belts);
 		free(line);
@@ -156,7 +224,9 @@ int main (int argc, const char * argv[] ){
 	// Free the line buffer
 	free(line);
 
-	if(sem_init(&factory_semaphore, 0, 1) != 0) { // Initialize the semaphore for the factory
+	// Initlize the semaphore of the factory
+	// The semaphore is used to synchronize the process_manager. It is initialized to 1, so that the first process_manager can start
+	if(sem_init(&factory_semaphore, 0, 1) != 0) {
 		printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
 		free(belts);
 		return -1;
@@ -165,6 +235,9 @@ int main (int argc, const char * argv[] ){
  
 	// Create the threads
 	for (int i = 0; i < belts_count; i++) {
+
+		// Initialize the semaphore for each process_manager. It is used to synchronize the process_manager.
+		// It is initialized to 0, so that the process_manager will wait for the signal to start
 		if (sem_init(&belts[i].semaphore_b, 0, 0) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
 			free(belts);
@@ -182,15 +255,15 @@ int main (int argc, const char * argv[] ){
 	}
 
 	for (int i = 0; i < belts_count; i++) {
-		 // Signal (alert) the semaphore to start the process_manager 
-		 if (sem_post(&belts[i].semaphore_b) != 0) {
+		// Signal (alert) the semaphore to start the process_manager 
+		if (sem_post(&belts[i].semaphore_b) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
 			free(belts);
 			return -1;
 		}
 	}
 
-	 // Wait for all threads to finish
+	// Wait for all threads to finish
 	for (int i = 0; i < belts_count; i++) {
 		if (pthread_join(belts[i].thread_b, NULL) != 0) {
 			printf("[ERROR][factory_manager] Process_manager with id %d has finished with error.\n", belts[i].id_belt);
