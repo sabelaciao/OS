@@ -136,7 +136,7 @@ int main (int argc, const char * argv[] ){
 		ptr += bytes_consumed;
 
 		// Check spacing after first number (must be exactly one space)
-		if (*ptr != ' ' || (ptr[1] == ' ')) {
+		if (*ptr != ' ' || ptr[1] < '0' || ptr[1] > '9') {
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(belts);
 			free(line);
@@ -157,7 +157,7 @@ int main (int argc, const char * argv[] ){
 		ptr += bytes_consumed;
 		
 		// Check spacing after second number (must be exactly one space)
-		if (*ptr != ' ' || (ptr[1] == ' ')) {
+		if (*ptr != ' ' || ptr[1] < '0' || ptr[1] > '9') {
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(belts);
 			free(line);
@@ -179,7 +179,7 @@ int main (int argc, const char * argv[] ){
     	// 1. End of string (valid)
     	// 2. Exactly one space (if more belts follow)
     	if (*ptr != '\0') {
-        	if (*ptr != ' ' || (ptr[1] == ' ')) {
+        	if (*ptr != ' ' || ptr[1] < '0' || ptr[1] > '9') {
             	printf("[ERROR][factory_manager] Invalid file.\n");
             	free(belts);
             	free(line);
