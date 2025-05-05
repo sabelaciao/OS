@@ -126,10 +126,13 @@ int main (int argc, const char * argv[] ){
 	// Pointer to the next argument
 	char *ptr = line + bytes_consumed; 
 
-	// Skip any spaces
-	while (*ptr == ' '){ 
-		ptr++;
-	} 
+	// Skip the first space
+	if (*ptr != ' ' || ptr[1] < '0' || ptr[1] > '9') {
+		printf("[ERROR][factory_manager] Invalid file.\n");
+		free(belts);
+		free(line);
+		return -1;
+	}
  
 	while((number_of_arguments = sscanf(ptr, "%d%n", &belts[belts_count].id_belt, &bytes_consumed)) == 1) {
  
@@ -211,14 +214,6 @@ int main (int argc, const char * argv[] ){
 
 	// Error if we have not read any belts. In the statement of the lab, it says: <Max number belts> [<belt ID> <belt size> <No.elements>]+
 	if (belts_count == 0) {
-		printf("[ERROR][factory_manager] Invalid file.\n");
-		free(belts);
-		free(line);
-		return -1;
-	}
- 
-	// Error if when finished reading the file, we have not read 3 by 3 arguments
-	if (number_of_arguments > 0) { 
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		free(belts);
 		free(line);
