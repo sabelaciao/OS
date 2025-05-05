@@ -194,7 +194,7 @@ int main (int argc, const char * argv[] ){
    	 	}
 
 		// Validate the values of the process_manager
-		if (belts[belts_count].id_belt < 0 || belts[belts_count].belt_size <= 0 || belts[belts_count].elements_to_generate <= 0) {
+		if (belts[belts_count].id_belt <= 0 || belts[belts_count].belt_size <= 0 || belts[belts_count].elements_to_generate <= 0) {
 			printf("[ERROR][factory_manager] Invalid file.\n");
 			free(belts);
 			free(line);
