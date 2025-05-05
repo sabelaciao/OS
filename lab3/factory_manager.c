@@ -25,15 +25,19 @@ int main (int argc, const char * argv[] ){
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		return -1;
 	}
- 
+	
+	// Open the file
 	int fd = open(argv[1], O_RDONLY);
 	if (fd < 0) {
 		printf("[ERROR][factory_manager] Invalid file.\n");
 		return -1;
 	}
- 
-	size_t buffer_size = 1024; // Initial buffer size
-	char *line = malloc(buffer_size); // Allocate memory for the unique line in the file
+	
+	// Initial buffer size
+	size_t buffer_size = 1024; 
+
+	// Allocate memory for the unique line in the file
+	char *line = malloc(buffer_size);
  
 	if (line == NULL) {
 		printf("[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
