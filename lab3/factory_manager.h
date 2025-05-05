@@ -12,6 +12,7 @@ typedef struct {
     pthread_t thread_b; // Thread assigned to the corresponding belt
 } process_data_t;
 
-extern sem_t factory_semaphore; // Global variable to hold the semaphores
+// Semaphore to synchronize the factory
+extern sem_t factory_semaphore;
 
 #endif
