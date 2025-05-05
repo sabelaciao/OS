@@ -56,11 +56,11 @@ void *consumer(void *arg){
 		printf("[ERROR][process_manager] Arguments not valid.\n");
 		pthread_exit((void *)-1);
 	}
- 
+    
 	int consumed = 0;
 	int total_elements = data->elements_to_generate;
  
-    // Consume the elements from the queue
+    // 'Consume' the elements from the queue
 	while (consumed < total_elements) {
  
 		// Dequeue an element
@@ -115,6 +115,7 @@ void *process_manager(void *arg) {
 	pthread_t producer_thread;
 	pthread_t consumer_thread;
  
+    // Initialize the producer and consumer threads
 	if (pthread_create(&producer_thread, NULL, producer, element) != 0 || pthread_create(&consumer_thread, NULL, consumer, element) != 0) {
 		printf("[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id_belt);
 		queue_destroy();
